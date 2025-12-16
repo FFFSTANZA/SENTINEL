@@ -236,3 +236,10 @@ def start_run(sentinel: Sentinel) -> RunHandle:
     ctx = RunContext()
     token = sentinel._run_context.set(ctx)
     return RunHandle(sentinel=sentinel, context=ctx, started_at=time.perf_counter(), token=token)
+
+
+_DEFAULT_SENTINEL = Sentinel()
+
+
+def get_default_sentinel() -> Sentinel:
+    return _DEFAULT_SENTINEL
