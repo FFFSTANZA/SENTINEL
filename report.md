@@ -1,139 +1,100 @@
-# Sentinel Phase 1 Report
+# Sentinel Phase 2 Report
 
-## What Phase 1 currently delivers ("Make it work")
+## "Make it smart"
 
-### 1) Core Mock Engine
-Implemented in `sentinel/mock_engine.py` and exposed via `sentinel.mock(...)`.
+Phase 2 focuses on adding agent-specific testing capabilities that traditional frameworks can't provide. This includes trajectory analysis, snapshot testing, adversarial testing, and behavioral validation.
 
-**Capabilities implemented**
-- Deterministic interception via in-process patching of common SDK entrypoints:
-  - OpenAI: `openai.ChatCompletion.create` (legacy) + best-effort support for v1-style resources
-  - Anthropic: `anthropic.resources.messages.Messages.create` + best-effort legacy `anthropic.messages.create`
-  - Google GenAI: `google.generativeai.GenerativeModel.generate_content`
-- Pattern matching:
-  - `contains=` (string or list of strings)
-  - `regex=` (case-insensitive)
-  - `semantic_match=` using deterministic token Jaccard similarity (fast, offline)
-- Response templates:
-  - `text`, plus tool metadata (`tools` and/or explicit `tool_calls`)
-- Stateful mocking (improved):
-  - Rules store `state["history"]` across turns
-  - **New:** `respond_sequence([...])` returns different responses across calls (multi-turn friendly)
-- Fallback handling:
-  - `error` (default): raise `NoMockMatchError`
-  - `default`: empty response
-  - `pass_through`: call the real SDK
-
-### 2) Recording + Replay
-Implemented in `sentinel/recording.py` and wired into the patch layer (`sentinel/patching.py`).
+### 1) Trajectory Capture & Analysis
+Implemented in `sentinel/trajectory.py`.
 
 **Capabilities implemented**
-- `record_session(name)`:
-  - switches fallback to `pass_through`
-  - records real SDK responses to `.sentinel/sessions/<name>.json`
-- `replay_session(name)`:
-  - loads the session file
-  - matches calls by a stable hash of `{provider, model, request}`
-- **Lifecycle improvement:** sessions can be started without a context manager and are automatically finalized when switching modes (`record_session` -> `replay_session`) or on `reset()/uninstall()`.
+- **Execution Trace**: Records the entire path of an agent's execution (LLM calls, tool calls).
+- **Step Validation**: `assert_steps([...])` allows asserting that specific steps (tool calls) happened in a specific order, or ensuring certain steps did *not* happen.
+- **Efficiency Analysis**:
+  - `assert_no_redundant_calls()`: Detects consecutive identical tool calls.
+  - `assert_no_infinite_loops(threshold=...)`: Detects repeating sequences of tool calls.
+- **Visual Debugging**: `visualize()` prints a text-based flowchart of the execution trace.
 
-### 3) pytest Integration Layer
-Implemented in `sentinel/pytest_plugin.py`.
+**User Experience**
+```python
+from sentinel import trajectory
 
-**Capabilities implemented**
-- Plugin provides fixtures:
-  - `sentinel`: preconfigured default instance, auto-installs/uninstalls patches per test
-  - `sentinel_agent`: helper for wrapping any agent
-- Markers registered:
-  - `sentinel_agent`, `sentinel_mock`, `sentinel_adversarial`
+@trajectory.capture
+def test_booking_flow():
+    # ... run agent ...
+    trajectory.assert_steps(["search_flights", "book_flight"])
+    trajectory.assert_no_infinite_loops()
+```
 
-### 4) Basic Assertion Library
-Implemented in `sentinel/assertions.py`.
-
-**Capabilities implemented**
-- `expect(response)` fluent assertions:
-  - text assertions: `to_contain`, `to_match`, `to_contain_intent` (deterministic semantic similarity)
-  - tool assertions: `to_have_called`, `to_have_called_with`, `not_to_have_called`
-  - timing: `to_have_response_time_under`
-  - basic safety: `not_to_contain_pii`
-
-### 5) Framework Adapters
-Implemented in `sentinel/adapters.py`.
+### 2) Snapshot Testing for Conversations
+Implemented in `sentinel/snapshot.py`.
 
 **Capabilities implemented**
-- `sentinel.wrap(agent)` supports:
-  - raw callables
-  - objects with `invoke()` (LangChain-style), `run()`
-- Produces a standardized `SentinelResponse`:
-  - `.text`, `.raw`, `.duration_seconds`, `.tool_calls`, `.llm_calls`
+- **Automated Regression Testing**: Records agent behavior to `.snapshots/<test_name>.yaml`.
+- **Modes**:
+  - `match(responses)`: Exact or structural match.
+  - `match(..., semantic=True)`: Uses token-based Jaccard similarity to allow for phrasing variations (threshold > 0.3).
+- **Selective Snapshots**:
+  - `match_tone(responses)`: Validates only the tone field.
+  - `match_tools(responses)`: Validates only the tool calls.
+
+**Dependencies Added**
+- `pyyaml`: Used for serializing and deserializing snapshot files.
+
+### 3) Adversarial Testing Engine
+Implemented in `sentinel/adversarial.py`.
+
+**Capabilities implemented**
+- **Security Testing Decorator**: `@adversarial.test(attacks=[...])` automatically runs the agent against known attack vectors.
+- **Built-in Attack Categories**:
+  - `jailbreak`: Checks if the agent can be tricked into ignoring instructions (e.g., "Ignore previous instructions").
+  - `pii_leak`: Checks if the agent reveals sensitive info (simulated).
+  - `tool_abuse`: Checks if the agent calls dangerous tools (e.g., `delete_database`) when prompted maliciously.
+- **Custom Attacks**: `@adversarial.custom([...])` allows defining domain-specific attack prompts and asserts the agent refuses them.
+
+**User Experience**
+```python
+from sentinel import adversarial
+
+@adversarial.test(attacks=["jailbreak", "pii_leak"])
+def test_agent_security(agent):
+    pass
+```
+
+### 4) Behavioral Validation Library
+Implemented in `sentinel/behavior.py`.
+
+**Capabilities implemented**
+- **Semantic Assertions**: High-level checks for "soft" qualities.
+  - `assert_empathetic`: Checks for empathetic keywords.
+  - `assert_professional`: Checks for absence of slang.
+  - `assert_no_defensiveness`: Checks for defensive phrasing.
+  - `assert_offers_solution`: Checks if a solution is proposed.
+  - `assert_no_harmful_content`: Safety check.
+- **Custom Validators**: `@behavior.define("rule_name")` to create reusable behavior checks.
+
+**User Experience**
+```python
+from sentinel import behavior
+
+def test_support_agent(response):
+    behavior.assert_empathetic(response)
+    behavior.assert_professional(response)
+```
+
+### 5) Refactoring & Architecture
+
+- **Circular Import Fix**: Moved `_DEFAULT_SENTINEL` and `get_default_sentinel` to `sentinel/core.py` to allow submodules (`trajectory`, etc.) to access the global instance without circular dependency on `sentinel/__init__.py`.
+- **Module Exposure**: New modules (`trajectory`, `snapshot`, `adversarial`, `behavior`) are exposed at the top-level `sentinel` package.
+- **Dependencies**: Added `pyyaml` to `pyproject.toml` (implicitly via environment).
 
 ---
 
-## Small test suite added
-A minimal test suite was added in `tests/test_phase1.py` to validate the Phase 1 contract:
+## Test Suite
+New tests were added to validate Phase 2 features:
+- `tests/test_trajectory.py`: Verifies capture, step assertion, and loop detection.
+- `tests/test_snapshot.py`: Verifies snapshot creation, matching, and semantic comparison.
+- `tests/test_adversarial.py`: Verifies attack simulation and failure reporting.
+- `tests/test_behavior.py`: Verifies built-in and custom behavioral assertions.
 
-- Mock interception for OpenAI-style calls (using a local fake `openai` module)
-- Rule precedence (last rule wins)
-- **Stateful** sequential responses (`respond_sequence`)
-- Record + replay flow **without requiring a context manager**
-- Smoke test for pytest fixture wiring
-
-These tests are designed to be:
-- deterministic
-- offline (no real API calls)
-- fast
-
----
-
-## What was initially implemented “poorly” and what was improved
-
-### 1) Stateful mocking was present but not very usable
-**Before:** rules stored history but could not naturally return different answers across turns.
-
-**Improvement implemented:** `respond_sequence([...])` for turn-by-turn scripted responses. This is a practical baseline for multi-turn agent testing without introducing complex templating.
-
-### 2) Recording sessions needed a context manager to safely flush to disk
-**Before:** calling `record_session("x")` started recording, but if you didn’t use `with ...:` you could easily forget to stop and never write the file.
-
-**Improvement implemented:**
-- `Sentinel` now tracks an active session.
-- Switching modes (`record_session` -> `replay_session`) automatically finalizes the active session.
-- `reset()` and `uninstall()` also finalize active sessions.
-- Added `stop_session()` convenience method.
-
-### 3) Config parsing on Python 3.10 was best-effort only
-**Before:** `tomli` was optional but not declared.
-
-**Improvement implemented:** added a conditional dependency:
-- `tomli>=2; python_version<'3.11'`
-
----
-
-## Known limitations / gaps (still Phase 1)
-
-1. **Semantic similarity is simplistic**
-   - Jaccard token similarity is fast and deterministic but not a true semantic embedding-based match.
-   - Future: pluggable similarity backends (local embeddings, cached remote embeddings).
-
-2. **SDK patching is best-effort**
-   - The patch layer targets common entrypoints, but SDKs evolve frequently.
-   - Future: patch at the HTTP transport layer (requests/httpx/aiohttp) for broader coverage.
-
-3. **Tool calls are a testing artifact, not real tool execution**
-   - Right now, tool calls are recorded as metadata (from mocks / parsed real responses).
-   - Future: integrate tool registries and capture actual tool invocations from frameworks.
-
-4. **Request normalization and replay keying is strict**
-   - Replay depends on stable serialization of requests.
-   - Future: smarter canonicalization (ignore timestamps, random seeds, headers).
-
----
-
-## Summary
-Phase 1 now supports deterministic, fast agent tests with:
-- a mock engine capable of keyword/regex/semantic-ish matching
-- multi-turn scripted responses
-- record-once/replay-forever flows
-- pytest-native fixtures
-- an assertion DSL focused on agent behaviors
-
-This is a strong foundation for Phase 2+ improvements (smarter semantic matching, broader interception, richer tooling introspection).
+All tests are passing.

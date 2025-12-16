@@ -5,6 +5,10 @@ from typing import Any, Callable, TypeVar
 from .assertions import expect
 from .core import Sentinel
 from .models import SentinelResponse, ToolCall
+from . import trajectory
+from . import snapshot
+from . import adversarial
+from . import behavior
 
 __all__ = [
     "Sentinel",
@@ -12,6 +16,10 @@ __all__ = [
     "expect",
     "SentinelResponse",
     "ToolCall",
+    "trajectory",
+    "snapshot",
+    "adversarial",
+    "behavior",
     "agent",
     "mock",
     "wrap",
@@ -24,14 +32,9 @@ __all__ = [
     "get_default_sentinel",
 ]
 
-_DEFAULT_SENTINEL = Sentinel()
+from .core import _DEFAULT_SENTINEL, get_default_sentinel
 
 sentinel = _DEFAULT_SENTINEL
-
-
-def get_default_sentinel() -> Sentinel:
-    return _DEFAULT_SENTINEL
-
 
 def install() -> None:
     _DEFAULT_SENTINEL.install()
