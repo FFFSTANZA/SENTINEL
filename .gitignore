@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.dist/
+dist/
+build/
+
+# Virtualenv
+.venv/
+venv/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Sentinel recordings
+.sentinel/
+
+# Editors
+.vscode/
+.idea/
