@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from .models import SentinelResponse, ToolCall
+from .models import SentinelResponse
 from .utils import jaccard_similarity
 
 

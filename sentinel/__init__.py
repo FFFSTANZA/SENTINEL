@@ -8,6 +8,7 @@ from .models import SentinelResponse, ToolCall
 
 __all__ = [
     "Sentinel",
+    "sentinel",
     "expect",
     "SentinelResponse",
     "ToolCall",
@@ -19,10 +20,13 @@ __all__ = [
     "reset",
     "install",
     "uninstall",
+    "stop_session",
     "get_default_sentinel",
 ]
 
 _DEFAULT_SENTINEL = Sentinel()
+
+sentinel = _DEFAULT_SENTINEL
 
 
 def get_default_sentinel() -> Sentinel:
@@ -39,6 +43,10 @@ def uninstall() -> None:
 
 def reset() -> None:
     _DEFAULT_SENTINEL.reset()
+
+
+def stop_session() -> None:
+    _DEFAULT_SENTINEL.stop_session()
 
 
 def mock(model: str, *, provider: str | None = None):

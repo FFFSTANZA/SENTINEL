@@ -4,7 +4,7 @@ import contextvars
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Sequence
 
 from .config import SentinelConfig, load_config
 from .mock_engine import MatchSpec, MockEngine, MockRule, PassThroughRequest, coerce_mock_response
@@ -71,6 +71,26 @@ class MockRuleBuilder:
         rule = MockRule(provider=self._provider, model=self._model, match=self._match, response=response)
         return self._sentinel.engine.add_rule(rule)
 
+    def respond_sequence(self, responses: Sequence[str | MockResponse]) -> MockRule:
+        sequence: list[MockResponse] = []
+        for r in responses:
+            if isinstance(r, MockResponse):
+                sequence.append(r)
+            else:
+                sequence.append(coerce_mock_response(r))
+
+        if not sequence:
+            sequence = [coerce_mock_response("")]
+
+        rule = MockRule(
+            provider=self._provider,
+            model=self._model,
+            match=self._match,
+            response=sequence[0],
+            response_sequence=sequence,
+        )
+        return self._sentinel.engine.add_rule(rule)
+
 
 class Sentinel:
     def __init__(self, config: SentinelConfig | None = None, *, root: Path | None = None) -> None:
@@ -83,15 +103,24 @@ class Sentinel:
             "sentinel_run_context", default=None
         )
         self._patch_manager = PatchManager(self._handle_call)
+        self._active_session: RecordingContext | None = None
 
     def install(self) -> None:
         self._patch_manager.install()
 
     def uninstall(self) -> None:
+        self.stop_session()
         self._patch_manager.uninstall()
 
     def reset(self) -> None:
+        self.stop_session()
         self.engine.reset()
+
+    def stop_session(self) -> None:
+        ctx = self._active_session
+        self._active_session = None
+        if ctx is not None:
+            ctx.stop()
 
     def mock(self, model: str, *, provider: str | None = None) -> MockModelBuilder:
         resolved_provider = provider or infer_provider(model)
@@ -104,11 +133,15 @@ class Sentinel:
         return SentinelAgent(agent, sentinel=self)
 
     def record_session(self, name: str) -> "RecordingContext":
+        self.stop_session()
         ctx = RecordingContext(self, name=name, mode="record", start_immediately=True)
+        self._active_session = ctx
         return ctx
 
     def replay_session(self, name: str) -> "RecordingContext":
+        self.stop_session()
         ctx = RecordingContext(self, name=name, mode="replay", start_immediately=True)
+        self._active_session = ctx
         return ctx
 
     def _handle_call(self, *, provider: str, model: str, request: dict[str, Any]) -> MockResponse:

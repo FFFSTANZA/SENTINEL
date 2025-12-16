@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import inspect
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
-from .core import Sentinel, start_run
+from .core import start_run
 from .models import SentinelResponse
 
 

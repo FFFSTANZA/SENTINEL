@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 from .models import FallbackMode, MockResponse, NoMockMatchError, ToolCall
 from .utils import flatten_messages, jaccard_similarity
@@ -37,7 +37,24 @@ class MockRule:
     model: str
     match: MatchSpec
     response: MockResponse
+    response_sequence: list[MockResponse] | None = None
+    response_factory: Callable[[dict[str, Any], str, dict[str, Any]], MockResponse] | None = None
     state: dict[str, Any] = field(default_factory=dict)
+
+    def resolve_response(self, *, prompt: str, request: dict[str, Any]) -> MockResponse:
+        if self.response_factory is not None:
+            return self.response_factory(self.state, prompt, request)
+
+        if self.response_sequence is not None and len(self.response_sequence) > 0:
+            idx = int(self.state.get("sequence_index", 0))
+            if idx < len(self.response_sequence):
+                chosen = self.response_sequence[idx]
+            else:
+                chosen = self.response_sequence[-1]
+            self.state["sequence_index"] = idx + 1
+            return chosen
+
+        return self.response
 
     def record_turn(self, *, prompt: str, response: MockResponse) -> None:
         history = self.state.setdefault("history", [])
@@ -72,8 +89,9 @@ class MockEngine:
             if rule.model != model:
                 continue
             if rule.match.matches(prompt):
-                rule.record_turn(prompt=prompt, response=rule.response)
-                return rule.response
+                response = rule.resolve_response(prompt=prompt, request=request)
+                rule.record_turn(prompt=prompt, response=response)
+                return response
 
         if self.fallback == "pass_through":
             raise PassThroughRequest(provider=provider, model=model, request=request)
