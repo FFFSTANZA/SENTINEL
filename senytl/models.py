@@ -7,11 +7,11 @@ from typing import Any, Literal
 FallbackMode = Literal["error", "default", "pass_through"]
 
 
-class SentinelError(Exception):
+class SenytlError(Exception):
     pass
 
 
-class NoMockMatchError(SentinelError):
+class NoMockMatchError(SenytlError):
     def __init__(self, *, provider: str, model: str, prompt: str) -> None:
         super().__init__(
             f"No mock matched provider={provider!r} model={model!r}. Prompt snippet: {prompt[:200]!r}"
@@ -44,7 +44,7 @@ class LLMCallRecord:
 
 
 @dataclass
-class SentinelResponse:
+class SenytlResponse:
     text: str
     tool_calls: list[ToolCall] = field(default_factory=list)
     raw: Any = None

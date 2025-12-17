@@ -1,11 +1,11 @@
-# Sentinel Phase 2 Report
+# Senytl Phase 2 Report
 
 ## "Make it smart"
 
 Phase 2 focuses on adding agent-specific testing capabilities that traditional frameworks can't provide. This includes trajectory analysis, snapshot testing, adversarial testing, and behavioral validation.
 
 ### 1) Trajectory Capture & Analysis
-Implemented in `sentinel/trajectory.py`.
+Implemented in `senytl/trajectory.py`.
 
 **Capabilities implemented**
 - **Execution Trace**: Records the entire path of an agent's execution (LLM calls, tool calls).
@@ -17,7 +17,7 @@ Implemented in `sentinel/trajectory.py`.
 
 **User Experience**
 ```python
-from sentinel import trajectory
+from senytl import trajectory
 
 @trajectory.capture
 def test_booking_flow():
@@ -27,7 +27,7 @@ def test_booking_flow():
 ```
 
 ### 2) Snapshot Testing for Conversations
-Implemented in `sentinel/snapshot.py`.
+Implemented in `senytl/snapshot.py`.
 
 **Capabilities implemented**
 - **Automated Regression Testing**: Records agent behavior to `.snapshots/<test_name>.yaml`.
@@ -42,7 +42,7 @@ Implemented in `sentinel/snapshot.py`.
 - `pyyaml`: Used for serializing and deserializing snapshot files.
 
 ### 3) Adversarial Testing Engine
-Implemented in `sentinel/adversarial.py`.
+Implemented in `senytl/adversarial.py`.
 
 **Capabilities implemented**
 - **Security Testing Decorator**: `@adversarial.test(attacks=[...])` automatically runs the agent against known attack vectors.
@@ -54,7 +54,7 @@ Implemented in `sentinel/adversarial.py`.
 
 **User Experience**
 ```python
-from sentinel import adversarial
+from senytl import adversarial
 
 @adversarial.test(attacks=["jailbreak", "pii_leak"])
 def test_agent_security(agent):
@@ -62,7 +62,7 @@ def test_agent_security(agent):
 ```
 
 ### 4) Behavioral Validation Library
-Implemented in `sentinel/behavior.py`.
+Implemented in `senytl/behavior.py`.
 
 **Capabilities implemented**
 - **Semantic Assertions**: High-level checks for "soft" qualities.
@@ -75,7 +75,7 @@ Implemented in `sentinel/behavior.py`.
 
 **User Experience**
 ```python
-from sentinel import behavior
+from senytl import behavior
 
 def test_support_agent(response):
     behavior.assert_empathetic(response)
@@ -84,8 +84,8 @@ def test_support_agent(response):
 
 ### 5) Refactoring & Architecture
 
-- **Circular Import Fix**: Moved `_DEFAULT_SENTINEL` and `get_default_sentinel` to `sentinel/core.py` to allow submodules (`trajectory`, etc.) to access the global instance without circular dependency on `sentinel/__init__.py`.
-- **Module Exposure**: New modules (`trajectory`, `snapshot`, `adversarial`, `behavior`) are exposed at the top-level `sentinel` package.
+- **Circular Import Fix**: Moved `_DEFAULT_SENYTL` and `get_default_senytl` to `senytl/core.py` to allow submodules (`trajectory`, etc.) to access the global instance without circular dependency on `senytl/__init__.py`.
+- **Module Exposure**: New modules (`trajectory`, `snapshot`, `adversarial`, `behavior`) are exposed at the top-level `senytl` package.
 - **Dependencies**: Added `pyyaml` to `pyproject.toml` (implicitly via environment).
 
 ---

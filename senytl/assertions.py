@@ -4,13 +4,13 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from .models import SentinelResponse
+from .models import SenytlResponse
 from .utils import jaccard_similarity
 
 
 @dataclass
 class Expectation:
-    response: SentinelResponse
+    response: SenytlResponse
 
     def to_contain(self, text: str) -> "Expectation":
         if text not in (self.response.text or ""):
@@ -98,5 +98,5 @@ def _args_contain(actual: dict[str, Any], expected: dict[str, Any]) -> bool:
     return True
 
 
-def expect(response: SentinelResponse) -> Expectation:
+def expect(response: SenytlResponse) -> Expectation:
     return Expectation(response)

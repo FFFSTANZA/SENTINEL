@@ -1,5 +1,5 @@
 import pytest
-from sentinel import snapshot
+from senytl import snapshot
 from dataclasses import dataclass
 from typing import List, Optional, Any
 

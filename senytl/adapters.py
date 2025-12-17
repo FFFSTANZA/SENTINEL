@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .core import start_run
-from .models import SentinelResponse
+from .models import SenytlResponse
 
 
 def _extract_text(result: Any) -> str:
@@ -59,13 +59,13 @@ def _call_agent(agent: Any, user_input: str, **kwargs: Any) -> Any:
 
 
 @dataclass
-class SentinelAgent:
+class SenytlAgent:
     agent: Any
-    sentinel: Sentinel
+    senytl: Any
     conversation: list[dict[str, Any]] = field(default_factory=list)
 
-    def run(self, user_input: str, **kwargs: Any) -> SentinelResponse:
-        handle = start_run(self.sentinel)
+    def run(self, user_input: str, **kwargs: Any) -> SenytlResponse:
+        handle = start_run(self.senytl)
         try:
             raw = _call_agent(self.agent, user_input, **kwargs)
         finally:
@@ -75,7 +75,7 @@ class SentinelAgent:
         self.conversation.append({"role": "user", "content": user_input})
         self.conversation.append({"role": "assistant", "content": text})
 
-        return SentinelResponse(
+        return SenytlResponse(
             text=text,
             raw=raw,
             duration_seconds=duration,

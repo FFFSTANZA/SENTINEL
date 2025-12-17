@@ -3,12 +3,12 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sentinel"
+name = "senytl"
 version = "0.1.0"
 description = "Deterministic, fast testing utilities for LLM agents"
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [{ name = "Sentinel" }]
+authors = [{ name = "Senytl" }]
 license = { text = "MIT" }
 dependencies = [
     "tomli>=2; python_version<'3.11'",
@@ -19,12 +19,12 @@ dependencies = [
 pytest = ["pytest>=7"]
 
 [project.entry-points.pytest11]
-sentinel = "sentinel.pytest_plugin"
+senytl = "senytl.pytest_plugin"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["sentinel*"]
+include = ["senytl*"]
 
-[tool.sentinel]
+[tool.senytl]
 fallback = "error"  # error | default
 

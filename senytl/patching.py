@@ -58,7 +58,7 @@ def _parse_google_response(resp: Any) -> MockResponse:
 class PatchManager:
     def __init__(self, handler: Callable[..., Any]) -> None:
         self._handler = handler
-        self._sentinel = getattr(handler, "__self__", None)
+        self._senytl = getattr(handler, "__self__", None)
         self._patches: list[Patch] = []
 
     def installed(self) -> bool:
@@ -90,16 +90,16 @@ class PatchManager:
         raw_response: Any,
         parser: Callable[[Any], MockResponse],
     ) -> None:
-        if self._sentinel is None:
+        if self._senytl is None:
             return
-        recorder = getattr(self._sentinel, "recorder", None)
+        recorder = getattr(self._senytl, "recorder", None)
         if recorder is None or getattr(recorder, "mode", None) != "record":
             return
 
         response = parser(raw_response)
         recorder.record(provider=provider, model=model, request=request, response=response, mocked=False)
 
-        trace = getattr(self._sentinel, "_trace", None)
+        trace = getattr(self._senytl, "_trace", None)
         if callable(trace):
             trace(provider=provider, model=model, request=request, response=response)
 
@@ -115,7 +115,7 @@ class PatchManager:
                 message["tool_calls"] = tool_calls
             return AttrDict(
                 {
-                    "id": "sentinel-mock",
+                    "id": "senytl-mock",
                     "object": "chat.completion",
                     "choices": [AttrDict({"index": 0, "message": AttrDict(message), "finish_reason": "stop"})],
                 }
@@ -127,7 +127,7 @@ class PatchManager:
                 args = tc.args if hasattr(tc, "args") else {}
                 result.append(
                     {
-                        "id": f"sentinel-toolcall-{idx}",
+                        "id": f"senytl-toolcall-{idx}",
                         "type": "function",
                         "function": {
                             "name": tc.name,
@@ -204,7 +204,7 @@ class PatchManager:
         def _make_messages_response(*, text: str) -> Any:
             return AttrDict(
                 {
-                    "id": "sentinel-mock",
+                    "id": "senytl-mock",
                     "type": "message",
                     "role": "assistant",
                     "content": [AttrDict({"type": "text", "text": text})],

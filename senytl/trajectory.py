@@ -5,18 +5,18 @@ from collections import Counter
 from typing import Any, Callable, List, Tuple, Union
 
 from . import core
-from .models import SentinelError
+from .models import SenytlError
 
-class TrajectoryError(SentinelError):
+class TrajectoryError(SenytlError):
     pass
 
 def capture(func: Callable) -> Callable:
     """Decorator to capture agent trajectory during test execution."""
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        sentinel = core.get_default_sentinel()
-        sentinel.install()
-        run_handle = core.start_run(sentinel)
+        senytl = core.get_default_senytl()
+        senytl.install()
+        run_handle = core.start_run(senytl)
         try:
             return func(*args, **kwargs)
         finally:
@@ -24,8 +24,8 @@ def capture(func: Callable) -> Callable:
     return wrapper
 
 def _get_current_context():
-    sentinel = core.get_default_sentinel()
-    ctx = sentinel._run_context.get()
+    senytl = core.get_default_senytl()
+    ctx = senytl._run_context.get()
     if ctx is None:
         raise TrajectoryError("No active trajectory. Ensure function is decorated with @trajectory.capture")
     return ctx
@@ -131,7 +131,7 @@ def assert_tool_selection_was_optimal():
     """
     ctx = _get_current_context()
     # If we have access to tool definitions/results, we could check for errors.
-    # Sentinel's ToolCall doesn't store the result/success status directly unless we infer it from the next turn.
+    # Senytl's ToolCall doesn't store the result/success status directly unless we infer it from the next turn.
     # But we can check if the tool exists in the mocked definition? 
     # Or just check if the agent tried to call a tool that wasn't mocked?
     # For now, let's assume it passes if no exceptions were thrown during execution regarding missing tools.
