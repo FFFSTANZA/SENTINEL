@@ -18,6 +18,9 @@ dependencies = [
 [project.optional-dependencies]
 pytest = ["pytest>=7"]
 
+[project.scripts]
+senytl = "senytl.cli:main"
+
 [project.entry-points.pytest11]
 senytl = "senytl.pytest_plugin"
 
