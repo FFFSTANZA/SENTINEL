@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Sequence
 
-from .config import SentinelConfig, load_config
+from .config import SenytlConfig, load_config
 from .mock_engine import MatchSpec, MockEngine, MockRule, PassThroughRequest, coerce_mock_response
 from .models import LLMCallRecord, MockResponse, ToolCall
 from .patching import PatchManager
@@ -30,8 +30,8 @@ class RunContext:
 
 
 class MockModelBuilder:
-    def __init__(self, sentinel: "Sentinel", provider: str, model: str) -> None:
-        self._sentinel = sentinel
+    def __init__(self, senytl: "Senytl", provider: str, model: str) -> None:
+        self._senytl = senytl
         self._provider = provider
         self._model = model
 
@@ -49,12 +49,12 @@ class MockModelBuilder:
             semantic_match=semantic_match,
             semantic_threshold=semantic_threshold,
         )
-        return MockRuleBuilder(self._sentinel, provider=self._provider, model=self._model, match=spec)
+        return MockRuleBuilder(self._senytl, provider=self._provider, model=self._model, match=spec)
 
 
 class MockRuleBuilder:
-    def __init__(self, sentinel: "Sentinel", *, provider: str, model: str, match: MatchSpec) -> None:
-        self._sentinel = sentinel
+    def __init__(self, senytl: "Senytl", *, provider: str, model: str, match: MatchSpec) -> None:
+        self._senytl = senytl
         self._provider = provider
         self._model = model
         self._match = match
@@ -69,7 +69,7 @@ class MockRuleBuilder:
     ) -> MockRule:
         response = coerce_mock_response(text, tools=tools, reasoning=reasoning, tool_calls=tool_calls)
         rule = MockRule(provider=self._provider, model=self._model, match=self._match, response=response)
-        return self._sentinel.engine.add_rule(rule)
+        return self._senytl.engine.add_rule(rule)
 
     def respond_sequence(self, responses: Sequence[str | MockResponse]) -> MockRule:
         sequence: list[MockResponse] = []
@@ -89,18 +89,18 @@ class MockRuleBuilder:
             response=sequence[0],
             response_sequence=sequence,
         )
-        return self._sentinel.engine.add_rule(rule)
+        return self._senytl.engine.add_rule(rule)
 
 
-class Sentinel:
-    def __init__(self, config: SentinelConfig | None = None, *, root: Path | None = None) -> None:
+class Senytl:
+    def __init__(self, config: SenytlConfig | None = None, *, root: Path | None = None) -> None:
         self.root = root or Path.cwd()
         self.config = config or load_config(self.root)
         self.engine = MockEngine(fallback=self.config.fallback)
-        self.recorder = SessionRecorder(sessions_dir=self.root / ".sentinel" / "sessions")
+        self.recorder = SessionRecorder(sessions_dir=self.root / ".senytl" / "sessions")
 
         self._run_context: contextvars.ContextVar[RunContext | None] = contextvars.ContextVar(
-            "sentinel_run_context", default=None
+            "senytl_run_context", default=None
         )
         self._patch_manager = PatchManager(self._handle_call)
         self._active_session: RecordingContext | None = None
@@ -127,10 +127,10 @@ class Sentinel:
         return MockModelBuilder(self, resolved_provider, model)
 
     def wrap(self, agent: Any) -> Any:
-        from .adapters import SentinelAgent
+        from .adapters import SenytlAgent
 
         self.install()
-        return SentinelAgent(agent, sentinel=self)
+        return SenytlAgent(agent, senytl=self)
 
     def record_session(self, name: str) -> "RecordingContext":
         self.stop_session()
@@ -173,16 +173,16 @@ class Sentinel:
 class RecordingContext:
     def __init__(
         self,
-        sentinel: Sentinel,
+        senytl: Senytl,
         *,
         name: str,
         mode: str,
         start_immediately: bool = False,
     ) -> None:
-        self._sentinel = sentinel
+        self._senytl = senytl
         self._name = name
         self._mode = mode
-        self._prev_fallback = sentinel.engine.fallback
+        self._prev_fallback = senytl.engine.fallback
         self._started = False
 
         if start_immediately:
@@ -193,13 +193,13 @@ class RecordingContext:
             return self
 
         if self._mode == "record":
-            self._sentinel.engine.fallback = "pass_through"
-            self._sentinel.recorder.start_recording(self._name)
+            self._senytl.engine.fallback = "pass_through"
+            self._senytl.recorder.start_recording(self._name)
         else:
-            self._sentinel.engine.fallback = "error"
-            self._sentinel.recorder.start_replay(self._name)
+            self._senytl.engine.fallback = "error"
+            self._senytl.recorder.start_replay(self._name)
 
-        self._sentinel.install()
+        self._senytl.install()
         self._started = True
         return self
 
@@ -208,11 +208,11 @@ class RecordingContext:
             return
         try:
             if self._mode == "record":
-                self._sentinel.recorder.stop_recording()
+                self._senytl.recorder.stop_recording()
             else:
-                self._sentinel.recorder.stop_replay()
+                self._senytl.recorder.stop_replay()
         finally:
-            self._sentinel.engine.fallback = self._prev_fallback
+            self._senytl.engine.fallback = self._prev_fallback
             self._started = False
 
     def stop(self) -> None:
@@ -221,25 +221,25 @@ class RecordingContext:
 
 @dataclass
 class RunHandle:
-    sentinel: Sentinel
+    senytl: Senytl
     context: RunContext
     started_at: float
     token: contextvars.Token[RunContext | None]
 
     def finish(self) -> tuple[RunContext, float]:
         duration = time.perf_counter() - self.started_at
-        self.sentinel._run_context.reset(self.token)
+        self.senytl._run_context.reset(self.token)
         return self.context, duration
 
 
-def start_run(sentinel: Sentinel) -> RunHandle:
+def start_run(senytl: Senytl) -> RunHandle:
     ctx = RunContext()
-    token = sentinel._run_context.set(ctx)
-    return RunHandle(sentinel=sentinel, context=ctx, started_at=time.perf_counter(), token=token)
+    token = senytl._run_context.set(ctx)
+    return RunHandle(senytl=senytl, context=ctx, started_at=time.perf_counter(), token=token)
 
 
-_DEFAULT_SENTINEL = Sentinel()
+_DEFAULT_SENYTL = Senytl()
 
 
-def get_default_sentinel() -> Sentinel:
-    return _DEFAULT_SENTINEL
+def get_default_senytl() -> Senytl:
+    return _DEFAULT_SENYTL

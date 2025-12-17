@@ -3,18 +3,18 @@ from __future__ import annotations
 from typing import Any, Callable, TypeVar
 
 from .assertions import expect
-from .core import Sentinel
-from .models import SentinelResponse, ToolCall
+from .core import Senytl
+from .models import SenytlResponse, ToolCall
 from . import trajectory
 from . import snapshot
 from . import adversarial
 from . import behavior
 
 __all__ = [
-    "Sentinel",
-    "sentinel",
+    "Senytl",
+    "senytl",
     "expect",
-    "SentinelResponse",
+    "SenytlResponse",
     "ToolCall",
     "trajectory",
     "snapshot",
@@ -29,43 +29,43 @@ __all__ = [
     "install",
     "uninstall",
     "stop_session",
-    "get_default_sentinel",
+    "get_default_senytl",
 ]
 
-from .core import _DEFAULT_SENTINEL, get_default_sentinel
+from .core import _DEFAULT_SENYTL, get_default_senytl
 
-sentinel = _DEFAULT_SENTINEL
+senytl = _DEFAULT_SENYTL
 
 def install() -> None:
-    _DEFAULT_SENTINEL.install()
+    _DEFAULT_SENYTL.install()
 
 
 def uninstall() -> None:
-    _DEFAULT_SENTINEL.uninstall()
+    _DEFAULT_SENYTL.uninstall()
 
 
 def reset() -> None:
-    _DEFAULT_SENTINEL.reset()
+    _DEFAULT_SENYTL.reset()
 
 
 def stop_session() -> None:
-    _DEFAULT_SENTINEL.stop_session()
+    _DEFAULT_SENYTL.stop_session()
 
 
 def mock(model: str, *, provider: str | None = None):
-    return _DEFAULT_SENTINEL.mock(model, provider=provider)
+    return _DEFAULT_SENYTL.mock(model, provider=provider)
 
 
 def wrap(agent: Any) -> Any:
-    return _DEFAULT_SENTINEL.wrap(agent)
+    return _DEFAULT_SENYTL.wrap(agent)
 
 
 def record_session(name: str):
-    return _DEFAULT_SENTINEL.record_session(name)
+    return _DEFAULT_SENYTL.record_session(name)
 
 
 def replay_session(name: str):
-    return _DEFAULT_SENTINEL.replay_session(name)
+    return _DEFAULT_SENYTL.replay_session(name)
 
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -74,12 +74,12 @@ F = TypeVar("F", bound=Callable[..., Any])
 def agent(fn: F) -> F:
     """pytest-friendly decorator for agent tests.
 
-    When pytest is present, this becomes a `@pytest.mark.sentinel_agent` marker.
+    When pytest is present, this becomes a `@pytest.mark.senytl_agent` marker.
     """
 
     try:
         import pytest  # type: ignore
 
-        return pytest.mark.sentinel_agent(fn)  # type: ignore[return-value]
+        return pytest.mark.senytl_agent(fn)  # type: ignore[return-value]
     except Exception:
         return fn

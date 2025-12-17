@@ -8,16 +8,16 @@ from .models import FallbackMode
 
 
 @dataclass
-class SentinelConfig:
+class SenytlConfig:
     fallback: FallbackMode = "error"
 
 
-def load_config(root: Path | None = None) -> SentinelConfig:
+def load_config(root: Path | None = None) -> SenytlConfig:
     root = root or Path.cwd()
 
     pyproject = root / "pyproject.toml"
     if not pyproject.exists():
-        return SentinelConfig()
+        return SenytlConfig()
 
     try:
         import tomllib  # py>=3.11
@@ -25,16 +25,16 @@ def load_config(root: Path | None = None) -> SentinelConfig:
         try:
             import tomli as tomllib  # type: ignore
         except Exception:
-            return SentinelConfig()
+            return SenytlConfig()
 
     try:
         payload = tomllib.loads(pyproject.read_text())
     except Exception:
-        return SentinelConfig()
+        return SenytlConfig()
 
-    tool_cfg: dict[str, Any] = ((payload.get("tool") or {}).get("sentinel") or {})
+    tool_cfg: dict[str, Any] = ((payload.get("tool") or {}).get("senytl") or {})
     fallback = tool_cfg.get("fallback")
     if fallback in {"error", "default", "pass_through"}:
-        return SentinelConfig(fallback=fallback)
+        return SenytlConfig(fallback=fallback)
 
-    return SentinelConfig()
+    return SenytlConfig()

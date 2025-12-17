@@ -1,5 +1,5 @@
 import pytest
-from sentinel import behavior
+from senytl import behavior
 
 class MockResponse:
     def __init__(self, text):

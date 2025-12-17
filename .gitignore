@@ -18,8 +18,8 @@ venv/
 .coverage
 htmlcov/
 
-# Sentinel recordings
-.sentinel/
+# Senytl recordings
+.senytl/
 
 # Editors
 .vscode/

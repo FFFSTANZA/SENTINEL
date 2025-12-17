@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from sentinel import Sentinel, expect
-from sentinel.utils import AttrDict
+from senytl import Senytl, expect
+from senytl.utils import AttrDict
 
 
 def _install_fake_openai(monkeypatch: pytest.MonkeyPatch) -> types.ModuleType:
@@ -51,16 +51,16 @@ def _raw_openai_agent(user_input: str) -> str:
     return resp.choices[0].message.content
 
 
-def test_pytest_fixture_smoke(sentinel):
-    sentinel.mock("gpt-4").when(contains="refund").respond("ok")
-    resp = sentinel.engine.handle(provider="openai", model="gpt-4", request={"prompt": "refund pls"})
+def test_pytest_fixture_smoke(senytl):
+    senytl.mock("gpt-4").when(contains="refund").respond("ok")
+    resp = senytl.engine.handle(provider="openai", model="gpt-4", request={"prompt": "refund pls"})
     assert resp.text == "ok"
 
 
 def test_mock_intercepts_openai_calls(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _install_fake_openai(monkeypatch)
 
-    s = Sentinel(root=tmp_path)
+    s = Senytl(root=tmp_path)
     s.install()
     s.mock("gpt-4").when(contains="refund").respond(
         "I'll process that refund",
@@ -76,7 +76,7 @@ def test_mock_intercepts_openai_calls(monkeypatch: pytest.MonkeyPatch, tmp_path:
 def test_rule_precedence_last_wins(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _install_fake_openai(monkeypatch)
 
-    s = Sentinel(root=tmp_path)
+    s = Senytl(root=tmp_path)
     s.install()
 
     s.mock("gpt-4").when(contains="refund").respond("first")
@@ -90,7 +90,7 @@ def test_rule_precedence_last_wins(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
 def test_stateful_sequence_responses(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _install_fake_openai(monkeypatch)
 
-    s = Sentinel(root=tmp_path)
+    s = Senytl(root=tmp_path)
     s.install()
 
     s.mock("gpt-4").when(contains="hello").respond_sequence(["one", "two"])
@@ -104,7 +104,7 @@ def test_stateful_sequence_responses(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 def test_record_and_replay_without_context_manager(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     openai = _install_fake_openai(monkeypatch)
 
-    s = Sentinel(root=tmp_path)
+    s = Senytl(root=tmp_path)
     s.install()
 
     s.record_session("sess1")
@@ -114,7 +114,7 @@ def test_record_and_replay_without_context_manager(monkeypatch: pytest.MonkeyPat
     real_resp = _raw_openai_agent("ping")
     assert real_resp == "REAL1"
 
-    session_path = tmp_path / ".sentinel" / "sessions" / "sess1.json"
+    session_path = tmp_path / ".senytl" / "sessions" / "sess1.json"
     assert not session_path.exists()
 
     # Switching to replay should auto-finalize recording and start replay.

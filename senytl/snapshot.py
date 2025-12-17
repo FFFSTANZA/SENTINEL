@@ -7,10 +7,10 @@ from typing import Any, List
 
 import yaml
 
-from .models import SentinelError
+from .models import SenytlError
 from .utils import jaccard_similarity
 
-class SnapshotError(SentinelError):
+class SnapshotError(SenytlError):
     pass
 
 class SnapshotMismatchError(SnapshotError):

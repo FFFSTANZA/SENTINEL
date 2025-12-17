@@ -5,17 +5,17 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from .models import MockResponse, SentinelError, ToolCall
+from .models import MockResponse, SenytlError, ToolCall
 from .utils import stable_hash, stable_json_dumps
 
 
-class RecordingNotFoundError(SentinelError):
+class RecordingNotFoundError(SenytlError):
     pass
 
 
 def _default_sessions_dir(root: Path | None = None) -> Path:
     base = root or Path.cwd()
-    return base / ".sentinel" / "sessions"
+    return base / ".senytl" / "sessions"
 
 
 def _normalize_request(provider: str, model: str, request: dict[str, Any]) -> dict[str, Any]:

@@ -1,5 +1,5 @@
 import pytest
-from sentinel import adversarial
+from senytl import adversarial
 from dataclasses import dataclass, field
 from typing import List, Optional, Any
 try:
