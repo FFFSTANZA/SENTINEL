@@ -9,6 +9,10 @@ from . import trajectory
 from . import snapshot
 from . import adversarial
 from . import behavior
+from . import multi_agent
+from . import coverage
+from . import generation
+from . import ci
 
 __all__ = [
     "Senytl",
@@ -20,6 +24,10 @@ __all__ = [
     "snapshot",
     "adversarial",
     "behavior",
+    "multi_agent",
+    "coverage",
+    "generation",
+    "ci",
     "agent",
     "mock",
     "wrap",

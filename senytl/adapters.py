@@ -6,6 +6,12 @@ from typing import Any
 from .core import start_run
 from .models import SenytlResponse
 
+try:
+    from .coverage import get_coverage_tracker
+    _HAS_COVERAGE = True
+except ImportError:
+    _HAS_COVERAGE = False
+
 
 def _extract_text(result: Any) -> str:
     if result is None:
@@ -75,10 +81,18 @@ class SenytlAgent:
         self.conversation.append({"role": "user", "content": user_input})
         self.conversation.append({"role": "assistant", "content": text})
 
-        return SenytlResponse(
+        response = SenytlResponse(
             text=text,
             raw=raw,
             duration_seconds=duration,
             llm_calls=ctx.llm_calls,
             tool_calls=ctx.tool_calls,
         )
+        
+        if _HAS_COVERAGE:
+            tracker = get_coverage_tracker()
+            tracker.record_input(user_input)
+            for tool_call in response.tool_calls:
+                tracker.record_tool_call(tool_call)
+        
+        return response
