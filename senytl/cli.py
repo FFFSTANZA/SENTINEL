@@ -166,7 +166,7 @@ def interactive_generate() -> int:
 
 def init_ci_command(args: List[str]) -> int:
     provider = "github"
-    if args and args[0] in ["--github", "--gitlab", "--circleci"]:
+    if args and args[0].startswith("--"):
         provider = args[0][2:]
     
     if provider == "github":
