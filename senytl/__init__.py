@@ -14,6 +14,7 @@ from . import coverage
 from . import generation
 from . import ci
 from . import semantic
+from . import state
 
 __all__ = [
     "Senytl",
@@ -30,6 +31,7 @@ __all__ = [
     "generation",
     "ci",
     "semantic",
+    "state",
     "agent",
     "mock",
     "wrap",
@@ -43,6 +45,23 @@ __all__ = [
 ]
 
 from .core import _DEFAULT_SENYTL, get_default_senytl
+from .state import (
+    checkpoint,
+    save_checkpoint,
+    from_checkpoint,
+    replay_from,
+    list_checkpoints,
+    delete_checkpoint,
+    get_current_state,
+    add_custom_state,
+    get_custom_state,
+    StateError,
+    CheckpointNotFoundError,
+    StateCorruptedError,
+    SystemState,
+    CheckpointMetadata,
+    reset_state_manager,
+)
 
 senytl = _DEFAULT_SENYTL
 
