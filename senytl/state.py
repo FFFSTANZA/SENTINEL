@@ -333,6 +333,8 @@ class StateManager:
         try:
             # Go up the stack to find the actual test function
             for _ in range(5):  # Check 5 frames up
+                if frame is None:
+                    break
                 frame = frame.f_back  # type: ignore
                 if frame and frame.f_code.co_name.startswith('test_'):
                     return frame.f_code.co_name
@@ -346,6 +348,8 @@ class StateManager:
         frame = inspect.currentframe()
         try:
             for _ in range(5):  # Check 5 frames up
+                if frame is None:
+                    break
                 frame = frame.f_back  # type: ignore
                 if frame and frame.f_code.co_filename.endswith('.py'):
                     return frame.f_code.co_filename
