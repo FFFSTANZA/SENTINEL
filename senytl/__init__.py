@@ -13,6 +13,7 @@ from . import multi_agent
 from . import coverage
 from . import generation
 from . import ci
+from . import semantic
 
 __all__ = [
     "Senytl",
@@ -28,6 +29,7 @@ __all__ = [
     "coverage",
     "generation",
     "ci",
+    "semantic",
     "agent",
     "mock",
     "wrap",

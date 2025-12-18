@@ -2,10 +2,70 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from .models import SenytlResponse
 from .utils import jaccard_similarity
+from .semantic import get_semantic_validator, semantic_similarity, SemanticValidationResult
+
+
+@dataclass
+class SemanticExpectation:
+    """Extended expectation for semantic validation with detailed results."""
+    
+    response: SenytlResponse
+    reference: str
+    threshold: float
+    model: str
+    explain: bool
+    
+    def __post_init__(self):
+        """Perform semantic validation on initialization."""
+        from .semantic import SemanticValidationConfig
+        config = SemanticValidationConfig(
+            model=self.model,
+            threshold=self.threshold,
+            explain=self.explain
+        )
+        self.validator = get_semantic_validator(config)
+        self.result = self.validator.validate_response_similarity(
+            self.response, self.reference
+        )
+        
+        if not self.result.passed:
+            raise AssertionError(
+                f"Expected response to be semantically similar to {self.reference!r} "
+                f"(threshold={self.threshold}, model={self.model!r}). "
+                f"Score={self.result.score:.3f}. Got: {self.response.text!r}\n"
+                f"Explanation: {self.result.explanation}"
+            )
+    
+    @property
+    def confidence(self) -> float:
+        """Get the similarity confidence score."""
+        return self.result.score
+    
+    @property
+    def explanation(self) -> str:
+        """Get the explanation for why validation passed/failed."""
+        return self.result.explanation
+    
+    @property
+    def passed(self) -> bool:
+        """Whether the semantic validation passed."""
+        return self.result.passed
+    
+    def with_threshold(self, new_threshold: float) -> "SemanticExpectation":
+        """Create new expectation with different threshold."""
+        return SemanticExpectation(
+            self.response, self.reference, new_threshold, self.model, self.explain
+        )
+    
+    def with_model(self, new_model: str) -> "SemanticExpectation":
+        """Create new expectation with different model."""
+        return SemanticExpectation(
+            self.response, self.reference, self.threshold, new_model, self.explain
+        )
 
 
 @dataclass
@@ -32,6 +92,39 @@ class Expectation:
                 f"Score={score:.3f}. Got: {self.response.text!r}"
             )
         return self
+
+    def semantically_similar_to(self, reference: str, *, 
+                                threshold: float = 0.85, 
+                                model: str = "all-MiniLM-L6-v2",
+                                explain: bool = True) -> "SemanticExpectation":
+        """Check semantic similarity using embedding-based validation.
+        
+        This method provides true semantic matching rather than basic keyword matching.
+        
+        Args:
+            reference: Reference text to compare against
+            threshold: Similarity threshold (0.0 to 1.0)
+            model: Sentence transformer model to use
+            explain: Whether to generate explanation for validation result
+            
+        Returns:
+            SemanticExpectation with additional methods like .confidence and .explanation
+            
+        Raises:
+            AssertionError: If similarity score is below threshold
+            
+        Example:
+            result = expect(response).semantically_similar_to(
+                "I will process your refund request",
+                threshold=0.85,
+                model="all-MiniLM-L6-v2"
+            )
+            print(result.confidence)  # 0.92
+            print(result.explanation)  # "Both texts discuss processing refunds"
+        """
+        return SemanticExpectation(
+            self.response, reference, threshold, model, explain
+        )
 
     def to_be_polite(self) -> "Expectation":
         text = (self.response.text or "").lower()
