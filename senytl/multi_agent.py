@@ -8,6 +8,33 @@ from .assertions import expect
 from .models import ToolCall
 
 
+class Agent:
+    """Represents an individual agent in a multi-agent system."""
+    
+    def __init__(self, name: str, implementation: Any):
+        """Initialize an agent.
+        
+        Args:
+            name: Unique identifier for the agent
+            implementation: Callable or object that implements the agent logic
+        """
+        self.name = name
+        self.implementation = implementation
+    
+    def __call__(self, input_msg: str) -> Any:
+        """Make the agent callable."""
+        if callable(self.implementation):
+            return self.implementation(input_msg)
+        elif hasattr(self.implementation, "run"):
+            return self.implementation.run(input_msg)
+        else:
+            raise ValueError(f"Agent {self.name} implementation is not callable")
+    
+    def run(self, input_msg: str) -> Any:
+        """Run the agent with given input."""
+        return self(input_msg)
+
+
 @dataclass
 class AgentMessage:
     from_agent: str

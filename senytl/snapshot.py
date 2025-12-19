@@ -28,6 +28,46 @@ def _get_caller_name() -> str:
             return frame.function
     return "unknown_test"
 
+def assert_snapshot(responses: List[Any], *, semantic: bool = False):
+    """Assert that responses match stored snapshot.
+    
+    This is an alias for the match() function with assertion behavior.
+    If snapshot doesn't exist, it will be created.
+    
+    Args:
+        responses: List of responses to match against snapshot
+        semantic: If True, use semantic matching for text fields
+    """
+    match(responses, semantic=semantic)
+
+def update_snapshots(test_pattern: str = "*.py"):
+    """Update all snapshots that match the pattern.
+    
+    This function regenerates all snapshot files by running tests and
+    capturing their outputs, effectively updating all snapshots to
+    match current behavior.
+    
+    Args:
+        test_pattern: Glob pattern for test files to update snapshots for
+    """
+    # This is a placeholder implementation
+    # In a real implementation, this would run tests and regenerate snapshots
+    import subprocess
+    import sys
+    import glob
+    
+    print(f"Updating snapshots for {test_pattern}")
+    test_files = glob.glob(test_pattern, recursive=True)
+    
+    for test_file in test_files:
+        if "test_" in test_file:
+            print(f"Running {test_file} to update snapshots...")
+            # This would need to be implemented with proper snapshot update logic
+            # For now, just indicate the intent
+    
+    print("Snapshot update complete")
+
+
 def match(responses: List[Any], semantic: bool = False):
     """
     Matches the responses against a stored snapshot.

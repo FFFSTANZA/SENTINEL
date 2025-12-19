@@ -96,3 +96,7 @@ class SenytlAgent:
                 tracker.record_tool_call(tool_call)
         
         return response
+
+    def __call__(self, user_input: str, **kwargs: Any) -> SenytlResponse:
+        """Make the agent callable by delegating to run method."""
+        return self.run(user_input, **kwargs)

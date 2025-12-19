@@ -151,8 +151,20 @@ class StateManager:
         return decorator
     
     @contextmanager
-    def from_checkpoint(self, name: str) -> Generator[None, None, None]:
-        """Context manager to run from a specific checkpoint."""
+    def from_checkpoint(self, name: str) -> Generator[Optional[SystemState], None, None]:
+        """Context manager to run from a specific checkpoint.
+        
+        Args:
+            name: Name of the checkpoint to load
+            
+        Yields:
+            SystemState: The loaded checkpoint state
+            
+        Example:
+            with state.from_checkpoint("after_user_login") as loaded_state:
+                # loaded_state contains the checkpoint data
+                assert loaded_state.custom_state["user_id"] == "123"
+        """
         if name not in self._registry:
             raise CheckpointNotFoundError(f"Checkpoint '{name}' not found. Available: {list(self._registry.keys())}")
         
@@ -176,7 +188,7 @@ class StateManager:
             
             # Execute with restored state
             try:
-                yield
+                yield state
             finally:
                 # Restore previous state
                 self._current_state = previous_state

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, TypeVar
 
-from .assertions import expect
+from .assertions import expect, expect_semantic_similarity
 from .core import Senytl
 from .models import SenytlResponse, ToolCall
 from . import trajectory
@@ -21,6 +21,7 @@ __all__ = [
     "Senytl",
     "senytl",
     "expect",
+    "expect_semantic_similarity",
     "SenytlResponse",
     "ToolCall",
     "trajectory",
