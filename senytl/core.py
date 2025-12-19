@@ -51,6 +51,14 @@ class MockModelBuilder:
         )
         return MockRuleBuilder(self._senytl, provider=self._provider, model=self._model, match=spec)
 
+    def __enter__(self) -> "MockModelBuilder":
+        """Support context manager protocol for mock setup."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Exit context manager - no cleanup needed."""
+        pass
+
 
 class MockRuleBuilder:
     def __init__(self, senytl: "Senytl", *, provider: str, model: str, match: MatchSpec) -> None:

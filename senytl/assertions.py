@@ -191,5 +191,36 @@ def _args_contain(actual: dict[str, Any], expected: dict[str, Any]) -> bool:
     return True
 
 
+def expect_semantic_similarity(response: SenytlResponse, reference: str, *, 
+                              threshold: float = 0.85, 
+                              model: str = "all-MiniLM-L6-v2",
+                              explain: bool = True) -> SemanticExpectation:
+    """Convenience function for semantic similarity expectations.
+    
+    Args:
+        response: SenytlResponse to validate
+        reference: Reference text to compare against
+        threshold: Similarity threshold (0.0 to 1.0)
+        model: Sentence transformer model to use
+        explain: Whether to generate explanation for validation result
+        
+    Returns:
+        SemanticExpectation with additional methods like .confidence and .explanation
+        
+    Raises:
+        AssertionError: If similarity score is below threshold
+        
+    Example:
+        result = expect_semantic_similarity(
+            response, 
+            "I will process your refund request",
+            threshold=0.85
+        )
+        print(result.confidence)  # 0.92
+        print(result.explanation)  # "Both texts discuss processing refunds"
+    """
+    return SemanticExpectation(response, reference, threshold, model, explain)
+
+
 def expect(response: SenytlResponse) -> Expectation:
     return Expectation(response)

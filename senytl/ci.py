@@ -220,6 +220,44 @@ jobs:
 """
 
 
+def generate_ci_report(
+    test_results: List[TestResult] | None = None,
+    coverage_percent: float = 0.0,
+    vulnerabilities: List[Dict[str, str]] | None = None,
+    duration: float = 0.0
+) -> CIReport:
+    """Generate a comprehensive CI report.
+    
+    Args:
+        test_results: List of test results to include in the report
+        coverage_percent: Coverage percentage from 0.0 to 100.0
+        vulnerabilities: List of detected vulnerabilities
+        duration: Total duration of test execution in seconds
+        
+    Returns:
+        CIReport with all the provided data and calculated metrics
+    """
+    if test_results is None:
+        test_results = []
+    if vulnerabilities is None:
+        vulnerabilities = []
+    
+    passed_tests = sum(1 for r in test_results if r.passed)
+    failed_tests = sum(1 for r in test_results if not r.passed)
+    skipped_tests = 0  # Not tracked in current test results
+    
+    return CIReport(
+        total_tests=len(test_results),
+        passed_tests=passed_tests,
+        failed_tests=failed_tests,
+        skipped_tests=skipped_tests,
+        duration=duration,
+        coverage_percent=coverage_percent,
+        vulnerabilities=vulnerabilities,
+        test_results=test_results
+    )
+
+
 def is_ci_environment() -> bool:
     ci_vars = ["CI", "CONTINUOUS_INTEGRATION", "GITHUB_ACTIONS", "GITLAB_CI", "CIRCLECI", "JENKINS_URL"]
     return any(os.getenv(var) for var in ci_vars)
