@@ -15,6 +15,7 @@ from . import generation
 from . import ci
 from . import semantic
 from . import state
+from . import performance
 
 __all__ = [
     "Senytl",
@@ -32,6 +33,7 @@ __all__ = [
     "ci",
     "semantic",
     "state",
+    "performance",
     "agent",
     "mock",
     "wrap",
