@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,17 +9,43 @@ description = "Deterministic, fast testing utilities for LLM agents"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Senytl" }]
-license = "MIT"
+license = { file = "LICENSE" }
+keywords = ["testing", "pytest", "llm", "agents", "mocking", "snapshot-testing", "coverage"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: Pytest",
+    "Topic :: Software Development :: Testing",
+]
 dependencies = [
     "tomli>=2; python_version<'3.11'",
-    "pyyaml",
-    "sentence-transformers>=2.0.0",
-    "torch>=1.8.0",
-    "psutil>=5.8.0"
+    "pyyaml>=6.0",
+    "psutil>=5.8.0",
 ]
 
 [project.optional-dependencies]
 pytest = ["pytest>=7"]
+semantic = [
+    "sentence-transformers>=2.0.0",
+    "torch>=1.8.0",
+]
+dev = [
+    "pytest>=7",
+    "build>=1.0.0",
+    "twine>=4.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/senytl/senytl"
+Repository = "https://github.com/senytl/senytl"
+Documentation = "https://github.com/senytl/senytl/tree/main/docs"
+Issues = "https://github.com/senytl/senytl/issues"
 
 [project.scripts]
 senytl = "senytl.cli:main"
@@ -33,4 +59,3 @@ include = ["senytl*"]
 
 [tool.senytl]
 fallback = "error"  # error | default
-

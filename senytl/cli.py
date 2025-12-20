@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import List
 
+from ._version import __version__
 from .ci import generate_github_workflow
 from .coverage import get_coverage_tracker
 from .generation import generate_summary, generate_tests
@@ -27,7 +28,10 @@ def main(args: List[str] | None = None) -> int:
     elif command == "init-ci":
         return init_ci_command(args[1:])
     elif command == "version":
-        print("Senytl v0.1.0")
+        print(f"Senytl v{__version__}")
+        return 0
+    elif command == "help":
+        print_help()
         return 0
     else:
         print(f"Unknown command: {command}")

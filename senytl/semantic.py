@@ -82,7 +82,7 @@ class SemanticValidator:
             if SentenceTransformer is None:
                 raise ImportError(
                     "sentence-transformers is required for semantic validation. "
-                    "Install with: pip install sentence-transformers"
+                    "Install with: pip install 'senytl[semantic]'"
                 )
             try:
                 model_name = self.config.model

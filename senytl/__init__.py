@@ -5,6 +5,7 @@ from typing import Any, Callable, TypeVar
 from .assertions import expect, expect_semantic_similarity
 from .core import Senytl
 from .models import SenytlResponse, ToolCall
+from ._version import __version__
 from . import trajectory
 from . import snapshot
 from . import adversarial
@@ -20,6 +21,7 @@ from . import performance
 __all__ = [
     "Senytl",
     "senytl",
+    "__version__",
     "expect",
     "expect_semantic_similarity",
     "SenytlResponse",
