@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State Persistence - Senytl</title>
+    <meta name="description" content="Test stateful LLM agents with Senytl's state persistence and replay system. Save and restore agent checkpoints.">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-icon">🧪</span>
+                    <span class="logo-text">Senytl</span>
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html#getting-started" class="nav-link">Getting Started</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#features" class="nav-link">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#docs" class="nav-link">Documentation</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#examples" class="nav-link">Examples</a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://github.com/senytl/senytl" class="nav-link">GitHub</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main style="margin-top: 4rem; padding: 2rem 0;">
+        <div class="container">
+            <div class="doc-header">
+                <nav class="doc-breadcrumb">
+                    <a href="../index.html">Home</a> / <a href="quickstart.html">Quick Start</a> / <span>State Persistence</span>
+                </nav>
+                <h1>State Persistence & Replay</h1>
+                <p class="doc-description">Test stateful LLM agents by saving and restoring checkpoints for reliable, reproducible testing scenarios.</p>
+            </div>
+
+            <div class="doc-content">
+                <section class="doc-section">
+                    <h2>Overview</h2>
+                    <p>Many LLM agents maintain state across interactions - conversation history, user preferences, session data, etc. Senytl's state persistence system allows you to:</p>
+                    <ul>
+                        <li><strong>Save checkpoints:</strong> Capture agent state at any point in time</li>
+                        <li><strong>Restore state:</strong> Resume testing from a specific state</li>
+                        <li><strong>Test continuity:</strong> Verify agents maintain context across sessions</li>
+                        <li><strong>Reproduce scenarios:</strong> Create deterministic test environments</li>
+                        <li><strong>Debug issues:</strong> Capture state when problems occur</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Basic State Persistence</h2>
+                    <p>Save and restore agent state using the <code>state</code> module:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">from senytl import state, expect
+
+# Save a checkpoint of agent state
+checkpoint = state.save_checkpoint("my-chat-agent")
+
+# Later, restore from the checkpoint
+def test_with_restored_state():
+    restored_agent = state.from_checkpoint(checkpoint)
+    
+    # Continue the conversation
+    response = restored_agent.run("What did we discuss earlier?")
+    expect(response).to_contain("previous conversation topic")
+    expect(response.success).to_be_true()</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Conversation Flow Testing</h2>
+                    <p>Test multi-turn conversations and state continuity:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">import pytest
+from senytl import state, expect
+
+@pytest.mark.senytl_agent
+def test_conversation_continuity(senytl_agent):
+    def chat_agent(message: str, conversation_history: list = None) -> str:
+        if conversation_history is None:
+            conversation_history = []
+        
+        # Add current message to history
+        conversation_history.append({"role": "user", "content": message})
+        
+        # Simulate LLM processing
+        if "name" in message.lower():
+            response = f"Sure, I'd be happy to help with that."
+        elif conversation_history:
+            response = f"I remember our conversation about: {conversation_history[-2]['content'] if len(conversation_history) > 1 else 'our chat'}"
+        else:
+            response = "Hello! How can I help you?"
+        
+        # Add response to history
+        conversation_history.append({"role": "assistant", "content": response})
+        
+        return response
+    
+    wrapped = senytl_agent(chat_agent)
+    
+    # First interaction
+    response1 = wrapped.run("Hi there!")
+    expect(response1).to_contain("Hello!")
+    
+    # Save state after first interaction
+    checkpoint = state.save_checkpoint("conversation_start")
+    
+    # Second interaction (should remember context)
+    response2 = wrapped.run("My name is Alice")
+    expect(response2).to_contain("happy to help")
+    
+    # Save another checkpoint
+    checkpoint2 = state.save_checkpoint("conversation_with_name")
+    
+    # Test restored state
+    restored_agent = state.from_checkpoint(checkpoint)
+    response3 = restored_agent.run("What is my name?")
+    expect(response3).to_contain("Alice")  # Should remember the name
+    
+    # Test from earlier checkpoint
+    restored_agent_early = state.from_checkpoint(checkpoint)
+    response4 = restored_agent_early.run("What is my name?")
+    expect(response4).not_to_contain("Alice")  # Name not set yet</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Stateful Agent Testing</h2>
+                    <p>Test agents that maintain internal state across interactions:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">from senytl import state, expect
+
+class StatefulAgent:
+    def __init__(self):
+        self.conversation_count = 0
+        self.user_preferences = {}
+        self.conversation_history = []
+    
+    def process_message(self, message: str) -> str:
+        self.conversation_count += 1
+        self.conversation_history.append(message)
+        
+        if "prefer" in message.lower():
+            # Extract preference
+            parts = message.lower().split("prefer")
+            if len(parts) > 1:
+                preference = parts[1].strip()
+                self.user_preferences["style"] = preference
+                return f"I've noted your preference for {preference}."
+        
+        if self.conversation_count == 1:
+            return "Welcome! How can I help you?"
+        elif self.user_preferences.get("style"):
+            return f"Using your preferred {self.user_preferences['style']} style: {message}"
+        else:
+            return f"Thanks for message #{self.conversation_count}: {message}"
+
+def test_stateful_agent_lifecycle():
+    agent = StatefulAgent()
+    
+    # Save initial state
+    checkpoint1 = state.save_checkpoint(agent, "initial")
+    
+    # First interaction
+    response1 = agent.process_message("Hello")
+    expect(response1).to_contain("Welcome!")
+    expect(agent.conversation_count).to_equal(1)
+    
+    # Save after first interaction
+    checkpoint2 = state.save_checkpoint(agent, "first_interaction")
+    
+    # Set preference
+    response2 = agent.process_message("I prefer concise responses")
+    expect(response2).to_contain("noted your preference")
+    
+    # Save after preference set
+    checkpoint3 = state.save_checkpoint(agent, "preference_set")
+    
+    # Test with preference
+    response3 = agent.process_message("Tell me about Python")
+    expect(response3).to_contain("concise style")
+    
+    # Test restored state from different points
+    restored_agent = state.from_checkpoint(checkpoint2)
+    response4 = restored_agent.process_message("Tell me about Python")
+    expect(response4).to_contain("message #2")  # Should start from conversation_count = 1
+    
+    restored_agent_prefs = state.from_checkpoint(checkpoint3)
+    response5 = restored_agent_prefs.process_message("Tell me about Python")
+    expect(response5).to_contain("concise style")  # Should have preferences</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>State Management Utilities</h2>
+                    
+                    <h3>Listing and Managing Checkpoints</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">from senytl import state
+
+# List all checkpoints
+checkpoints = state.list_checkpoints()
+for checkpoint in checkpoints:
+    print(f"ID: {checkpoint.id}")
+    print(f"Name: {checkpoint.name}")
+    print(f"Created: {checkpoint.created_at}")
+    print(f"Size: {checkpoint.size}")
+
+# Get checkpoint by name or ID
+checkpoint = state.get_checkpoint("my-chat-agent")
+checkpoint = state.get_checkpoint("checkpoint-id-123")
+
+# Delete checkpoints
+state.delete_checkpoint("old-checkpoint")
+
+# Clear all checkpoints
+state.clear_all_checkpoints()</code></pre>
+                    </div>
+
+                    <h3>State Serialization</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Export checkpoint to file for external storage
+checkpoint = state.save_checkpoint("my-agent")
+state.export_checkpoint(checkpoint, "checkpoint.json")
+
+# Import checkpoint from file
+imported_checkpoint = state.import_checkpoint("checkpoint.json")
+
+# Create checkpoint with custom metadata
+checkpoint = state.save_checkpoint(
+    "my-agent",
+    metadata={
+        "test_scenario": "user_registration",
+        "test_case": "valid_user",
+        "environment": "test"
+    }
+)</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Integration with pytest</h2>
+                    <p>Use state persistence in your pytest tests:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">import pytest
+from senytl import state, expect
+
+@pytest.mark.senytl_agent
+def test_conversation_scenarios(senytl_agent):
+    """Test different conversation scenarios"""
+    
+    def conversation_agent(message: str, context: dict = None) -> str:
+        if context is None:
+            context = {"step": 0, "user_info": {}}
+        
+        if context["step"] == 0:
+            context["step"] = 1
+            return "What's your name?"
+        elif context["step"] == 1:
+            context["user_info"]["name"] = message
+            context["step"] = 2
+            return f"Nice to meet you, {message}! What's your email?"
+        elif context["step"] == 2:
+            context["user_info"]["email"] = message
+            context["step"] = 3
+            return f"Thanks! I've collected: {context['user_info']}"
+        else:
+            return "Registration complete!"
+    
+    wrapped = senytl_agent(conversation_agent)
+    
+    # Scenario 1: Complete registration
+    response1 = wrapped.run("")  # Empty input for first step
+    expect(response1).to_contain("name")
+    
+    response2 = wrapped.run("John Doe")  # Provide name
+    expect(response2).to_contain("John Doe")
+    expect(response2).to_contain("email")
+    
+    response3 = wrapped.run("john@example.com")  # Provide email
+    expect(response3).to_contain("John Doe")
+    expect(response3).to_contain("john@example.com")
+    
+    # Save successful registration state
+    registration_checkpoint = state.save_checkpoint("successful_registration")
+    
+    # Scenario 2: Test error handling from saved state
+    def error_agent(message: str, context: dict = None) -> str:
+        if message == "error":
+            raise ValueError("Simulated error")
+        return f"Processed: {message}"
+    
+    wrapped_error = senytl_agent(error_agent)
+    
+    # Test normal case
+    response = wrapped_error.run("normal")
+    expect(response.success).to_be_true()
+    
+    # Test error case
+    response = wrapped_error.run("error")
+    expect(response.success).to_be_false()
+    expect(response.error).to_contain("Simulated error")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Advanced State Patterns</h2>
+                    
+                    <h3>Conditional State Restoration</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_conditional_restoration():
+    # Save multiple checkpoints
+    checkpoint_success = state.save_checkpoint("success_scenario")
+    checkpoint_failure = state.save_checkpoint("failure_scenario")
+    
+    # Test both scenarios
+    scenarios = [
+        (checkpoint_success, "success", True),
+        (checkpoint_failure, "failure", False)
+    ]
+    
+    for checkpoint, scenario_name, should_succeed in scenarios:
+        restored_agent = state.from_checkpoint(checkpoint)
+        response = restored_agent.run("test input")
+        
+        if should_succeed:
+            expect(response.success).to_be_true()
+        else:
+            expect(response.success).to_be_false()</code></pre>
+                    </div>
+
+                    <h3>State Diff and Comparison</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Compare two checkpoints
+checkpoint1 = state.get_checkpoint("initial_state")
+checkpoint2 = state.get_checkpoint("modified_state")
+
+diff = state.compare_checkpoints(checkpoint1, checkpoint2)
+print("State differences:")
+for field, (old_value, new_value) in diff.items():
+    print(f"  {field}: {old_value} -> {new_value}")
+
+# Check if state has specific values
+has_name = state.checkpoint_has_field(checkpoint, "user_info.name")
+print(f"Has user name: {has_name}")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Configuration</h2>
+                    <p>Configure state persistence settings:</p>
+                    <div class="code-block">
+                        <pre><code class="language-toml">[tool.senytl.state]
+enabled = true
+storage_path = ".senytl/checkpoints"
+max_checkpoints = 100
+auto_cleanup = true
+compression = true
+
+[tool.senytl.state.serialization]
+format = "json"  # json, pickle, or custom
+include_metadata = true
+pretty_print = false</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Best Practices</h2>
+                    <ul>
+                        <li><strong>Name your checkpoints descriptively:</strong> Use meaningful names like "preference_set" or "user_authenticated"</li>
+                        <li><strong>Save critical state points:</strong> Capture state after important operations or decisions</li>
+                        <li><strong>Include metadata:</strong> Add context about when and why checkpoints were created</li>
+                        <li><strong>Clean up old checkpoints:</strong> Use auto-cleanup or manually remove unnecessary checkpoints</li>
+                        <li><strong>Test restoration:</strong> Always test that restored state behaves as expected</li>
+                        <li><strong>Version your checkpoints:</strong> Include version information for compatibility</li>
+                        <li><strong>Handle large state carefully:</strong> Compress large state objects to save space</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Next Steps</h2>
+                    <p>Continue exploring advanced testing capabilities:</p>
+                    <ul>
+                        <li><a href="performance.html">Performance Testing</a> - Test stateful agent performance</li>
+                        <li><a href="multi-agent.html">Multi-Agent Testing</a> - Test agent-to-agent state sharing</li>
+                        <li><a href="coverage.html">Coverage Tracking</a> - Monitor state coverage in tests</li>
+                        <li><a href="ci.html">CI/CD Integration</a> - Automate state testing in pipelines</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="logo-icon">🧪</span>
+                        <span class="logo-text">Senytl</span>
+                    </div>
+                    <p>Deterministic, fast testing utilities for LLM agents</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="installation.html">Installation</a></li>
+                        <li><a href="quickstart.html">Quick Start</a></li>
+                        <li><a href="testing.html">Documentation</a></li>
+                        <li><a href="../index.html#examples">Examples</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/senytl/senytl">GitHub</a></li>
+                        <li><a href="https://github.com/senytl/senytl/issues">Issues</a></li>
+                        <li><a href="https://pypi.org/project/senytl/">PyPI</a></li>
+                        <li><a href="https://github.com/senytl/senytl/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>License</h4>
+                    <p>MIT License</p>
+                    <p>© 2024 Senytl Contributors</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Built with ❤️ for the LLM testing community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+    <style>
+        .doc-header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .doc-breadcrumb {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .doc-breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .doc-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .doc-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+        
+        .doc-content {
+            max-width: 800px;
+        }
+        
+        .doc-section {
+            margin-bottom: 3rem;
+        }
+        
+        .doc-section h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .doc-section h3 {
+            margin: 2rem 0 1rem 0;
+            color: var(--text-primary);
+        }
+        
+        .doc-section p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        .doc-section ul {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .doc-section li {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .doc-section code {
+            background: var(--bg-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--primary-color);
+        }
+    </style>
+</body>
+</html>

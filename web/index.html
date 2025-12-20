@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senytl - Testing Framework for LLM Agents</title>
+    <meta name="description" content="Senytl is a comprehensive testing framework designed specifically for Large Language Model (LLM) agents with deterministic, fast testing primitives.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🧪</span>
+                <span class="logo-text">Senytl</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#getting-started" class="nav-link">Getting Started</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#features" class="nav-link">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#docs" class="nav-link">Documentation</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#examples" class="nav-link">Examples</a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://github.com/senytl/senytl" class="nav-link">GitHub</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        <span class="gradient-text">Deterministic, fast testing utilities</span>
+                        <br>for LLM agents
+                    </h1>
+                    <p class="hero-description">
+                        Senytl is a comprehensive testing framework designed specifically for Large Language Model (LLM) agents. 
+                        It provides deterministic, fast testing primitives that help developers build, test, and deploy reliable AI agents with confidence.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="#getting-started" class="btn btn-primary">Get Started</a>
+                        <a href="docs/installation.html" class="btn btn-secondary">Installation</a>
+                        <a href="https://pypi.org/project/senytl/" class="btn btn-tertiary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                            </svg>
+                            PyPI
+                        </a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-number">Python 3.10+</span>
+                            <span class="stat-label">Support</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">pytest</span>
+                            <span class="stat-label">Integration</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">MIT</span>
+                            <span class="stat-label">License</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="code-title">example.py</span>
+                        </div>
+                        <pre><code class="language-python">from senytl import Senytl, expect
+
+# Create a Senytl instance
+senytl = Senytl()
+
+# Define your agent
+def my_agent(prompt: str) -> str:
+    return f"Hello! You said: {prompt}"
+
+# Wrap your agent for testing
+wrapped = senytl(my_agent)
+
+# Run and test your agent
+response = wrapped.run("Hello!")
+expect(response).to_contain("Hello")</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Powerful Features for LLM Testing</h2>
+                    <p>Everything you need to test, validate, and deploy reliable LLM agents</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🧪</div>
+                        <h3>pytest Integration</h3>
+                        <p>Seamless integration with pytest fixtures and markers for familiar testing workflows.</p>
+                        <a href="docs/testing.html" class="feature-link">Learn more →</a>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Coverage & Quality Metrics</h3>
+                        <p>Track tool coverage, conversation paths, input diversity, and quality scores automatically.</p>
+                        <a href="docs/coverage.html" class="feature-link">Learn more →</a>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3>State Persistence & Replay</h3>
+                        <p>Test stateful agents by saving and restoring checkpoints for reliable testing scenarios.</p>
+                        <a href="docs/state.html" class="feature-link">Learn more →</a>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Performance & SLA Testing</h3>
+                        <p>Benchmark latency, throughput, cost, and resource usage with comprehensive performance metrics.</p>
+                        <a href="docs/performance.html" class="feature-link">Learn more →</a>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🚀</div>
+                        <h3>CI/CD Integration</h3>
+                        <p>Automated reporting and assertions for continuous integration with GitHub Actions support.</p>
+                        <a href="docs/ci.html" class="feature-link">Learn more →</a>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>Multi-Agent Testing</h3>
+                        <p>Orchestrate and test complex multi-agent systems with comprehensive interaction testing.</p>
+                        <a href="docs/multi-agent.html" class="feature-link">Learn more →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Getting Started Section -->
+        <section id="getting-started" class="getting-started">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Getting Started</h2>
+                    <p>Start testing your LLM agents in minutes</p>
+                </div>
+                <div class="getting-started-content">
+                    <div class="step">
+                        <div class="step-number">01</div>
+                        <div class="step-content">
+                            <h3>Install Senytl</h3>
+                            <p>Install the framework with your preferred package manager</p>
+                            <div class="code-block">
+                                <pre><code class="language-bash">pip install senytl
+
+# For pytest integration
+pip install "senytl[pytest]"
+
+# Full installation
+pip install "senytl[pytest,semantic]"</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">02</div>
+                        <div class="step-content">
+                            <h3>Create Your First Test</h3>
+                            <p>Wrap your agent and start testing with assertions</p>
+                            <div class="code-block">
+                                <pre><code class="language-python">import pytest
+from senytl import expect
+
+@pytest.mark.senytl_agent
+def test_my_agent(senytl_agent):
+    def my_agent(prompt: str) -> str:
+        return f"Response: {prompt}"
+    
+    wrapped = senytl_agent(my_agent)
+    response = wrapped.run("Test")
+    
+    expect(response).to_contain("Test")</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">03</div>
+                        <div class="step-content">
+                            <h3>Run with Coverage</h3>
+                            <p>Track your testing coverage and quality metrics</p>
+                            <div class="code-block">
+                                <pre><code class="language-bash"># Run with coverage reporting
+pytest --senytl-coverage
+
+# CI mode with detailed reporting
+pytest --senytl-coverage --ci</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Documentation Preview Section -->
+        <section id="docs" class="documentation-preview">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Documentation</h2>
+                    <p>Comprehensive guides and API reference</p>
+                </div>
+                <div class="docs-grid">
+                    <div class="doc-category">
+                        <h3>Core Concepts</h3>
+                        <ul>
+                            <li><a href="docs/installation.html">Installation</a></li>
+                            <li><a href="docs/quickstart.html">Quick Start Guide</a></li>
+                            <li><a href="docs/testing.html">Testing Basics</a></li>
+                            <li><a href="docs/assertions.html">Assertions</a></li>
+                        </ul>
+                    </div>
+                    <div class="doc-category">
+                        <h3>Advanced Features</h3>
+                        <ul>
+                            <li><a href="docs/state.html">State Persistence</a></li>
+                            <li><a href="docs/performance.html">Performance Testing</a></li>
+                            <li><a href="docs/multi-agent.html">Multi-Agent Testing</a></li>
+                            <li><a href="docs/coverage.html">Coverage Tracking</a></li>
+                        </ul>
+                    </div>
+                    <div class="doc-category">
+                        <h3>Integrations</h3>
+                        <ul>
+                            <li><a href="docs/pytest.html">pytest Plugin</a></li>
+                            <li><a href="docs/ci.html">CI/CD Integration</a></li>
+                            <li><a href="docs/cli.html">CLI Commands</a></li>
+                            <li><a href="docs/snapshots.html">Snapshot Testing</a></li>
+                        </ul>
+                    </div>
+                    <div class="doc-category">
+                        <h3>Specialized Testing</h3>
+                        <ul>
+                            <li><a href="docs/adversarial.html">Adversarial Testing</a></li>
+                            <li><a href="docs/semantic.html">Semantic Validation</a></li>
+                            <li><a href="docs/generation.html">Test Generation</a></li>
+                            <li><a href="docs/behavior.html">Behavioral Testing</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Examples Section -->
+        <section id="examples" class="examples">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Examples</h2>
+                    <p>Real-world usage patterns and best practices</p>
+                </div>
+                <div class="examples-grid">
+                    <div class="example-card">
+                        <h3>Basic Agent Testing</h3>
+                        <p>Learn how to test simple LLM agents with assertions and coverage tracking.</p>
+                        <div class="code-snippet">
+                            <pre><code class="language-python">from senytl import Senytl, expect
+
+senytl = Senytl()
+
+def chat_agent(message: str) -> str:
+    return f"Echo: {message}"
+
+wrapped = senytl(chat_agent)
+response = wrapped.run("Hello")
+expect(response).to_contain("Echo: Hello")</code></pre>
+                        </div>
+                        <a href="examples/basic-testing.html" class="example-link">View Full Example →</a>
+                    </div>
+                    <div class="example-card">
+                        <h3>Performance Benchmarking</h3>
+                        <p>Test SLA compliance with latency, throughput, and cost assertions.</p>
+                        <div class="code-snippet">
+                            <pre><code class="language-python">from senytl import performance
+
+@performance.benchmark
+def llm_agent(prompt: str):
+    return f"Response: {prompt}"
+
+@performance.load_test(concurrent_users=10)
+def test_concurrent():
+    response = llm_agent("test")
+    response.assert_latency_under(2.0)</code></pre>
+                        </div>
+                        <a href="examples/performance-testing.html" class="example-link">View Full Example →</a>
+                    </div>
+                    <div class="example-card">
+                        <h3>Stateful Agent Testing</h3>
+                        <p>Test conversation continuity and state persistence across interactions.</p>
+                        <div class="code-snippet">
+                            <pre><code class="language-python">from senytl import state
+
+# Save checkpoint
+checkpoint = state.save_checkpoint("chat-state")
+
+# Restore and continue
+def test_continuity():
+    agent = state.from_checkpoint(checkpoint)
+    response = agent.run("Continue")
+    expect(response).to_contain("previous context")</code></pre>
+                        </div>
+                        <a href="examples/state-testing.html" class="example-link">View Full Example →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="logo-icon">🧪</span>
+                        <span class="logo-text">Senytl</span>
+                    </div>
+                    <p>Deterministic, fast testing utilities for LLM agents</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="docs/installation.html">Installation</a></li>
+                        <li><a href="docs/quickstart.html">Quick Start</a></li>
+                        <li><a href="docs/testing.html">Documentation</a></li>
+                        <li><a href="examples/">Examples</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/senytl/senytl">GitHub</a></li>
+                        <li><a href="https://github.com/senytl/senytl/issues">Issues</a></li>
+                        <li><a href="https://pypi.org/project/senytl/">PyPI</a></li>
+                        <li><a href="https://github.com/senytl/senytl/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>License</h4>
+                    <p>MIT License</p>
+                    <p>© 2024 Senytl Contributors</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Built with ❤️ for the LLM testing community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

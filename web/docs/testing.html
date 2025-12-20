@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing Basics - Senytl</title>
+    <meta name="description" content="Learn the fundamentals of testing LLM agents with Senytl. Master assertions, fixtures, and pytest integration.">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-icon">🧪</span>
+                    <span class="logo-text">Senytl</span>
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html#getting-started" class="nav-link">Getting Started</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#features" class="nav-link">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#docs" class="nav-link">Documentation</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#examples" class="nav-link">Examples</a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://github.com/senytl/senytl" class="nav-link">GitHub</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main style="margin-top: 4rem; padding: 2rem 0;">
+        <div class="container">
+            <div class="doc-header">
+                <nav class="doc-breadcrumb">
+                    <a href="../index.html">Home</a> / <a href="quickstart.html">Quick Start</a> / <span>Testing Basics</span>
+                </nav>
+                <h1>Testing Basics</h1>
+                <p class="doc-description">Master the fundamentals of testing LLM agents with Senytl's powerful testing primitives.</p>
+            </div>
+
+            <div class="doc-content">
+                <section class="doc-section">
+                    <h2>pytest Integration</h2>
+                    <p>Senytl seamlessly integrates with pytest, providing fixtures and markers for LLM agent testing:</p>
+                    
+                    <h3>Available Fixtures</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">import pytest
+from senytl import Senytl, expect
+
+@pytest.mark.senytl_agent
+def test_with_senytl_agent_fixture(senytl_agent):
+    """Test using the senytl_agent fixture"""
+    
+    def my_agent(prompt: str) -> str:
+        return f"Agent response to: {prompt}"
+    
+    # The fixture provides a wrapped Senytl instance
+    response = senytl_agent(my_agent).run("Hello!")
+    expect(response).to_contain("Hello!")
+
+@pytest.mark.senytl_agent
+def test_with_senytl_fixture(senytl):
+    """Test using the senytl fixture"""
+    
+    def my_agent(prompt: str) -> str:
+        return f"Response: {prompt}"
+    
+    # Manually wrap the agent
+    wrapped = senytl(my_agent)
+    response = wrapped.run("Test")
+    expect(response.success).to_be_true()</code></pre>
+                    </div>
+
+                    <h3>Available Markers</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">import pytest
+
+# Mark tests that involve Senytl agents
+@pytest.mark.senytl_agent
+def test_llm_agent():
+    pass
+
+# Mark tests that use mocking
+@pytest.mark.senytl_mock
+def test_with_mocking():
+    pass
+
+# Mark tests that involve adversarial testing
+@pytest.mark.senytl_adversarial
+def test_adversarial_robustness():
+    pass</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Core Assertions</h2>
+                    <p>Senytl provides a comprehensive set of assertions for testing agent responses:</p>
+                    
+                    <h3>Content Assertions</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">from senytl import expect
+
+def test_content_assertions(senytl_agent):
+    def my_agent(prompt: str) -> str:
+        return f"Processing: {prompt} - Completed"
+    
+    wrapped = senytl_agent(my_agent)
+    response = wrapped.run("task123")
+    
+    # Basic content assertions
+    expect(response).to_contain("task123")
+    expect(response).to_contain("Processing:")
+    expect(response).to_contain("Completed")
+    
+    # Prefix and suffix assertions
+    expect(response).to_start_with("Processing:")
+    expect(response).to_end_with("Completed")
+    
+    # Pattern matching
+    expect(response).to_match_pattern(r"Processing: \w+ - Completed")
+    
+    # Length assertions
+    expect(response).to_have_length_greater_than(10)
+    expect(response).to_have_length_less_than(100)
+    expect(response).to_have_length_between(10, 100)</code></pre>
+                    </div>
+
+                    <h3>Success and Error Assertions</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_success_and_error_assertions(senytl_agent):
+    def reliable_agent(prompt: str) -> str:
+        return f"Success: {prompt}"
+    
+    def unreliable_agent(prompt: str) -> str:
+        if prompt == "error":
+            raise ValueError("Test error occurred")
+        return f"Success: {prompt}"
+    
+    # Test reliable agent
+    wrapped = senytl_agent(reliable_agent)
+    response = wrapped.run("test")
+    expect(response.success).to_be_true()
+    expect(response.error).to_be_none()
+    
+    # Test unreliable agent
+    wrapped = senytl_agent(unreliable_agent)
+    
+    # Normal case
+    response = wrapped.run("normal")
+    expect(response.success).to_be_true()
+    
+    # Error case
+    response = wrapped.run("error")
+    expect(response.success).to_be_false()
+    expect(response.error).to_contain("Test error occurred")
+    expect(response.error).to_match_pattern(r".*error.*")</code></pre>
+                    </div>
+
+                    <h3>Type and Structure Assertions</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_type_and_structure_assertions(senytl_agent):
+    def json_agent(prompt: str) -> str:
+        import json
+        return json.dumps({"message": prompt, "status": "success"})
+    
+    wrapped = senytl_agent(json_agent)
+    response = wrapped.run("test")
+    
+    # Type assertions
+    expect(response).to_be_string()
+    expect(response.output).to_be_string()
+    
+    # JSON structure assertions
+    import json
+    data = json.loads(response.output)
+    expect(data).to_be_dict()
+    expect(data).to_have_key("message")
+    expect(data).to_have_key("status")
+    expect(data["status"]).to_equal("success")
+    expect(data["message"]).to_contain("test")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Response Object</h2>
+                    <p>The <code>SenytlResponse</code> object contains comprehensive information about agent execution:</p>
+                    
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_response_object_access(senytl_agent):
+    def my_agent(prompt: str) -> str:
+        return f"Processed: {prompt}"
+    
+    wrapped = senytl_agent(my_agent)
+    response = wrapped.run("test input")
+    
+    # Basic properties
+    print(f"Success: {response.success}")
+    print(f"Output: {response.output}")
+    print(f"Error: {response.error}")
+    print(f"Execution time: {response.execution_time}")
+    
+    # Detailed properties
+    print(f"Input tokens: {response.input_tokens}")
+    print(f"Output tokens: {response.output_tokens}")
+    print(f"Total tokens: {response.tokens_used}")
+    print(f"Cost estimate: ${response.cost_estimate}")
+    print(f"Memory usage: {response.memory_usage}")
+    
+    # Context and metadata
+    print(f"Model used: {response.model}")
+    print(f"Provider: {response.provider}")
+    print(f"Timestamp: {response.timestamp}")
+    
+    # Access raw response data
+    print(f"Raw response: {response.raw}")
+    
+    # Access coverage data
+    print(f"Coverage data: {response.coverage_data}")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Advanced Testing Patterns</h2>
+                    
+                    <h3>Parameterized Testing</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">import pytest
+from senytl import expect
+
+@pytest.mark.senytl_agent
+@pytest.mark.parametrize("input_text,expected_word", [
+    ("hello world", "hello"),
+    ("python programming", "python"),
+    ("machine learning", "machine"),
+    ("artificial intelligence", "artificial"),
+])
+def test_multiple_inputs(senytl_agent, input_text, expected_word):
+    def word_processor(prompt: str) -> str:
+        return prompt.split()[0]  # Return first word
+    
+    wrapped = senytl_agent(word_processor)
+    response = wrapped.run(input_text)
+    
+    expect(response).to_contain(expected_word)
+    expect(response.success).to_be_true()
+
+@pytest.mark.senytl_agent
+@pytest.mark.parametrize("error_type,expected_error", [
+    ("value_error", "ValueError"),
+    ("type_error", "TypeError"),
+    ("key_error", "KeyError"),
+])
+def test_error_handling(senytl_agent, error_type, expected_error):
+    def error_agent(prompt: str) -> str:
+        if error_type == "value_error":
+            raise ValueError("Invalid value")
+        elif error_type == "type_error":
+            raise TypeError("Invalid type")
+        elif error_type == "key_error":
+            raise KeyError("Key not found")
+        return "Success"
+    
+    wrapped = senytl_agent(error_agent)
+    response = wrapped.run("test")
+    
+    expect(response.success).to_be_false()
+    expect(response.error).to_contain(expected_error)</code></pre>
+                    </div>
+
+                    <h3>Fixture Composition</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">@pytest.fixture
+def chat_agent(senytl_agent):
+    """Custom fixture for testing chat agents"""
+    def chat_agent_impl(message: str, context: str = "") -> str:
+        if context:
+            return f"Context: {context} | Message: {message}"
+        return f"Message: {message}"
+    
+    return senytl_agent(chat_agent_impl)
+
+@pytest.mark.senytl_agent
+def test_with_custom_fixture(chat_agent):
+    # Test without context
+    response = chat_agent.run("Hello!")
+    expect(response).to_contain("Message: Hello!")
+    
+    # Test with context (this would require a different approach)
+    # chat_agent.run("Hi!", context="previous conversation")</code></pre>
+                    </div>
+
+                    <h3>Test Data Management</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">import pytest
+from senytl import expect
+
+# Test data as constants
+VALID_PROMPTS = [
+    "What is the weather today?",
+    "Explain quantum computing",
+    "Write a Python function",
+    "Translate to Spanish: Hello",
+]
+
+INVALID_PROMPTS = [
+    "",
+    "   ",  # Whitespace only
+    "x" * 10000,  # Very long prompt
+    None,  # This would cause issues
+]
+
+@pytest.mark.senytl_agent
+@pytest.mark.parametrize("prompt", VALID_PROMPTS)
+def test_valid_prompts(chat_agent, prompt):
+    response = chat_agent.run(prompt)
+    expect(response.success).to_be_true()
+    expect(response.output).to_be_string()
+
+@pytest.mark.senytl_agent
+@pytest.mark.parametrize("prompt", INVALID_PROMPTS[:3])  # Skip None for this example
+def test_invalid_prompts(chat_agent, prompt):
+    response = chat_agent.run(prompt)
+    # Depending on your agent's behavior, you might expect success or failure
+    # This is agent-specific</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Best Practices</h2>
+                    <ul>
+                        <li><strong>Use descriptive test names:</strong> Test names should clearly describe what's being tested</li>
+                        <li><strong>Keep tests isolated:</strong> Each test should be independent and not rely on other tests</li>
+                        <li><strong>Test edge cases:</strong> Include tests for empty inputs, very long inputs, and error conditions</li>
+                        <li><strong>Use appropriate assertions:</strong> Choose the most specific assertion that validates your requirement</li>
+                        <li><parameterize similar tests:</parameterize> Avoid code duplication by parameterizing similar test cases</li>
+                        <li><strong>Mock external dependencies:</strong> Use <code>@pytest.mark.senytl_mock</code> for tests that need mocking</li>
+                        <li><strong>Track coverage:</strong> Use <code>--senytl-coverage</code> to monitor test coverage</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Configuration and Settings</h2>
+                    <p>Configure Senytl behavior in your test suite:</p>
+                    
+                    <h3>pytest.ini Configuration</h3>
+                    <div class="code-block">
+                        <pre><code class="language-ini">[tool:pytest]
+markers =
+    senytl_agent: marks tests as senytl agent tests
+    senytl_mock: marks tests that use mocking
+    senytl_adversarial: marks adversarial tests
+addopts = --senytl-coverage --strict-markers
+testpaths = tests</code></pre>
+                    </div>
+
+                    <h3>Environment Configuration</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">import os
+import pytest
+
+@pytest.fixture(scope="session", autouse=True)
+def configure_senytl():
+    """Configure Senytl for the test session"""
+    # Set test environment variables
+    os.environ["SENYTL_TEST_MODE"] = "true"
+    os.environ["SENYTL_LOG_LEVEL"] = "DEBUG"
+    
+    yield  # This is where the tests run
+    
+    # Cleanup after tests
+    if "SENYTL_TEST_MODE" in os.environ:
+        del os.environ["SENYTL_TEST_MODE"]</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Next Steps</h2>
+                    <p>Now that you understand the basics, explore these advanced topics:</p>
+                    <ul>
+                        <li><a href="assertions.html">Advanced Assertions</a> - Semantic and behavioral testing</li>
+                        <li><a href="performance.html">Performance Testing</a> - Benchmark and SLA testing</li>
+                        <li><a href="state.html">State Persistence</a> - Test stateful agents</li>
+                        <li><a href="coverage.html">Coverage Tracking</a> - Monitor test coverage</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="logo-icon">🧪</span>
+                        <span class="logo-text">Senytl</span>
+                    </div>
+                    <p>Deterministic, fast testing utilities for LLM agents</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="installation.html">Installation</a></li>
+                        <li><a href="quickstart.html">Quick Start</a></li>
+                        <li><a href="testing.html">Documentation</a></li>
+                        <li><a href="../index.html#examples">Examples</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/senytl/senytl">GitHub</a></li>
+                        <li><a href="https://github.com/senytl/senytl/issues">Issues</a></li>
+                        <li><a href="https://pypi.org/project/senytl/">PyPI</a></li>
+                        <li><a href="https://github.com/senytl/senytl/discussions">Discussions</a></li>
+                </div>
+                    </ul>
+                <div class="footer-section">
+                    <h4>License</h4>
+                    <p>MIT License</p>
+                    <p>© 2024 Senytl Contributors</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Built with ❤️ for the LLM testing community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+    <style>
+        .doc-header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .doc-breadcrumb {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .doc-breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .doc-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .doc-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+        
+        .doc-content {
+            max-width: 800px;
+        }
+        
+        .doc-section {
+            margin-bottom: 3rem;
+        }
+        
+        .doc-section h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .doc-section h3 {
+            margin: 2rem 0 1rem 0;
+            color: var(--text-primary);
+        }
+        
+        .doc-section p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        .doc-section ul {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .doc-section li {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .doc-section code {
+            background: var(--bg-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--primary-color);
+        }
+        
+        .language-ini .token.section {
+            color: #c792ea;
+        }
+        
+        .language-ini .token.key {
+            color: #82aaff;
+        }
+        
+        .language-ini .token.string {
+            color: #c3e88d;
+        }
+    </style>
+</body>
+</html>

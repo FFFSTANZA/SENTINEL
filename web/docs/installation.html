@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation - Senytl</title>
+    <meta name="description" content="Install Senytl testing framework with pip. Support for pytest integration, semantic testing, and full feature set.">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-icon">🧪</span>
+                    <span class="logo-text">Senytl</span>
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html#getting-started" class="nav-link">Getting Started</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#features" class="nav-link">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#docs" class="nav-link">Documentation</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#examples" class="nav-link">Examples</a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://github.com/senytl/senytl" class="nav-link">GitHub</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main style="margin-top: 4rem; padding: 2rem 0;">
+        <div class="container">
+            <div class="doc-header">
+                <nav class="doc-breadcrumb">
+                    <a href="../index.html">Home</a> / <span>Installation</span>
+                </nav>
+                <h1>Installation</h1>
+                <p class="doc-description">Get started with Senytl in minutes with pip install or your favorite package manager.</p>
+            </div>
+
+            <div class="doc-content">
+                <section class="doc-section">
+                    <h2>Requirements</h2>
+                    <ul>
+                        <li>Python 3.10 or higher</li>
+                        <li>pip, poetry, or conda package manager</li>
+                        <li>Optional: pytest for integration features</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Basic Installation</h2>
+                    <p>Install Senytl using pip:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="code-title">Terminal</span>
+                        </div>
+                        <pre><code class="language-bash">pip install senytl</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Installation with Extras</h2>
+                    <p>Senytl offers several optional extras for enhanced functionality:</p>
+
+                    <h3>Pytest Integration</h3>
+                    <p>Recommended for seamless pytest integration:</p>
+                    <div class="code-block">
+                        <pre><code class="language-bash">pip install "senytl[pytest]"</code></pre>
+                    </div>
+
+                    <h3>Semantic Testing</h3>
+                    <p>For semantic similarity testing using embeddings:</p>
+                    <div class="code-block">
+                        <pre><code class="language-bash">pip install "senytl[semantic]"</code></pre>
+                    </div>
+
+                    <h3>Full Installation</h3>
+                    <p>Install all features:</p>
+                    <div class="code-block">
+                        <pre><code class="language-bash">pip install "senytl[pytest,semantic]"</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Alternative Package Managers</h2>
+                    
+                    <h3>Poetry</h3>
+                    <div class="code-block">
+                        <pre><code class="language-bash">poetry add senytl</code></pre>
+                    </div>
+                    <p>With extras:</p>
+                    <div class="code-block">
+                        <pre><code class="language-bash">poetry add "senytl[pytest,semantic]"</code></pre>
+                    </div>
+
+                    <h3>Pipenv</h3>
+                    <div class="code-block">
+                        <pre><code class="language-bash">pipenv install senytl</code></pre>
+                    </div>
+
+                    <h3>Conda</h3>
+                    <div class="code-block">
+                        <pre><code class="language-bash">conda install -c conda-forge senytl</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Development Installation</h2>
+                    <p>For contributors and development work:</p>
+                    <div class="code-block">
+                        <pre><code class="language-bash">git clone https://github.com/senytl/senytl.git
+cd senytl
+pip install -e ".[pytest,semantic,dev]"</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Verification</h2>
+                    <p>Verify your installation:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">import senytl
+print(f"Senytl version: {senytl.__version__}")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Dependencies</h2>
+                    <p>Senytl includes these core dependencies:</p>
+                    <ul>
+                        <li><code>pyyaml</code> - Configuration parsing</li>
+                        <li><code>psutil</code> - System and process utilities</li>
+                        <li><code>tomli</code> - TOML file parsing (Python &lt; 3.11)</li>
+                    </ul>
+                    <p>Optional extras:</p>
+                    <ul>
+                        <li><code>pytest</code> - Testing framework integration</li>
+                        <li><code>torch</code> - PyTorch for embeddings</li>
+                        <li><code>sentence-transformers</code> - Semantic similarity testing</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Troubleshooting</h2>
+                    
+                    <h3>Import Errors</h3>
+                    <p>If you encounter import errors, ensure all dependencies are installed:</p>
+                    <div class="code-block">
+                        <pre><code class="language-bash">pip install --upgrade senytl "senytl[pytest,semantic]"</code></pre>
+                    </div>
+
+                    <h3>Permission Issues</h3>
+                    <p>On Unix systems, you may need to use:</p>
+                    <div class="code-block">
+                        <pre><code class="language-bash">pip install --user senytl</code></pre>
+                    </div>
+
+                    <h3>Virtual Environment</h3>
+                    <p>Always use a virtual environment:</p>
+                    <div class="code-block">
+                        <pre><code class="language-bash">python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install senytl</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Next Steps</h2>
+                    <p>Now that you've installed Senytl, you can:</p>
+                    <ul>
+                        <li><a href="quickstart.html">Read the Quick Start Guide</a></li>
+                        <li><a href="testing.html">Learn about Testing Basics</a></li>
+                        <li><a href="performance.html">Explore Performance Testing</a></li>
+                        <li><a href="../index.html#examples">Browse Examples</a></li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="logo-icon">🧪</span>
+                        <span class="logo-text">Senytl</span>
+                    </div>
+                    <p>Deterministic, fast testing utilities for LLM agents</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="installation.html">Installation</a></li>
+                        <li><a href="quickstart.html">Quick Start</a></li>
+                        <li><a href="testing.html">Documentation</a></li>
+                        <li><a href="../index.html#examples">Examples</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/senytl/senytl">GitHub</a></li>
+                        <li><a href="https://github.com/senytl/senytl/issues">Issues</a></li>
+                        <li><a href="https://pypi.org/project/senytl/">PyPI</a></li>
+                        <li><a href="https://github.com/senytl/senytl/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>License</h4>
+                    <p>MIT License</p>
+                    <p>© 2024 Senytl Contributors</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Built with ❤️ for the LLM testing community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+    <style>
+        .doc-header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .doc-breadcrumb {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .doc-breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .doc-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .doc-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+        
+        .doc-content {
+            max-width: 800px;
+        }
+        
+        .doc-section {
+            margin-bottom: 3rem;
+        }
+        
+        .doc-section h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .doc-section h3 {
+            margin: 2rem 0 1rem 0;
+            color: var(--text-primary);
+        }
+        
+        .doc-section p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        .doc-section ul {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .doc-section li {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .doc-section code {
+            background: var(--bg-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--primary-color);
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .copy-btn:hover {
+            background: var(--bg-secondary);
+        }
+    </style>
+</body>
+</html>
