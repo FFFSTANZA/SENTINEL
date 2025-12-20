@@ -35,16 +35,10 @@ semantic = [
     "sentence-transformers>=2.0.0",
     "torch>=1.8.0",
 ]
-dev = [
-    "pytest>=7",
-    "build>=1.0.0",
-    "twine>=4.0.0",
-]
 
 [project.urls]
 Homepage = "https://github.com/senytl/senytl"
 Repository = "https://github.com/senytl/senytl"
-Documentation = "https://github.com/senytl/senytl/tree/main/docs"
 Issues = "https://github.com/senytl/senytl/issues"
 
 [project.scripts]

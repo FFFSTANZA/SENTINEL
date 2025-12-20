@@ -42,13 +42,6 @@ senytl version
 senytl suggest-tests
 ```
 
-## Documentation
-
-- [Phase 3 Features](https://github.com/senytl/senytl/blob/main/docs/guides/phase3_features.md)
-- [Performance & Resource Testing](https://github.com/senytl/senytl/blob/main/docs/performance.md)
-- [State Persistence & Replay](https://github.com/senytl/senytl/blob/main/docs/state_persistence.md)
-- [Tests Quick Start](https://github.com/senytl/senytl/blob/main/docs/guides/tests_quick_start.md)
-
 ## License
 
 MIT (see [LICENSE](LICENSE)).
