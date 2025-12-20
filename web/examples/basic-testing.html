@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Agent Testing - Senytl Examples</title>
+    <meta name="description" content="Learn how to test simple LLM agents with Senytl. Practical examples for basic agent testing with assertions and coverage tracking.">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-icon">🧪</span>
+                    <span class="logo-text">Senytl</span>
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html#getting-started" class="nav-link">Getting Started</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#features" class="nav-link">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#docs" class="nav-link">Documentation</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#examples" class="nav-link">Examples</a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://github.com/senytl/senytl" class="nav-link">GitHub</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main style="margin-top: 4rem; padding: 2rem 0;">
+        <div class="container">
+            <div class="doc-header">
+                <nav class="doc-breadcrumb">
+                    <a href="../index.html">Home</a> / <a href="../index.html#examples">Examples</a> / <span>Basic Agent Testing</span>
+                </nav>
+                <h1>Basic Agent Testing</h1>
+                <p class="doc-description">Learn how to test simple LLM agents with assertions and coverage tracking.</p>
+            </div>
+
+            <div class="doc-content">
+                <section class="doc-section">
+                    <h2>Overview</h2>
+                    <p>This example demonstrates how to test a basic LLM agent using Senytl's core testing features. We'll cover:</p>
+                    <ul>
+                        <li>Creating a simple echo agent</li>
+                        <li>Writing comprehensive test cases</li>
+                        <li>Using various assertion types</li>
+                        <li>Running tests with coverage tracking</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>The Agent</h2>
+                    <p>Let's start with a simple chat agent that echoes user input with some processing:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="code-title">chat_agent.py</span>
+                        </div>
+                        <pre><code class="language-python">"""
+Simple chat agent for demonstration purposes
+"""
+import re
+from typing import Optional
+
+
+class ChatAgent:
+    """A simple chat agent that processes user messages"""
+    
+    def __init__(self):
+        self.conversation_count = 0
+        self.user_name: Optional[str] = None
+    
+    def process_message(self, message: str) -> str:
+        """
+        Process a user message and return a response
+        
+        Args:
+            message: The user's input message
+            
+        Returns:
+            str: The agent's response
+        """
+        self.conversation_count += 1
+        
+        # Handle name extraction
+        if "my name is" in message.lower():
+            name_match = re.search(r"my name is (\w+)", message.lower())
+            if name_match:
+                self.user_name = name_match.group(1)
+                return f"Nice to meet you, {self.user_name}!"
+        
+        # Greet returning user
+        if self.user_name:
+            return f"Hello again, {self.user_name}! You said: {message}"
+        
+        # Default response
+        if self.conversation_count == 1:
+            return f"Hello! I received your message: {message}"
+        else:
+            return f"You said: {message}"</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Writing Tests</h2>
+                    <p>Now let's write comprehensive tests for our chat agent:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="code-title">test_chat_agent.py</span>
+                        </div>
+                        <pre><code class="language-python">"""
+Comprehensive tests for the ChatAgent
+"""
+import pytest
+from senytl import expect
+from chat_agent import ChatAgent
+
+
+@pytest.mark.senytl_agent
+class TestChatAgent:
+    """Test suite for ChatAgent functionality"""
+    
+    def test_initial_state(self, senytl_agent):
+        """Test that agent starts with correct initial state"""
+        
+        def create_agent() -> str:
+            agent = ChatAgent()
+            return f"Count: {agent.conversation_count}, Name: {agent.user_name}"
+        
+        wrapped = senytl_agent(create_agent)
+        response = wrapped.run("")
+        
+        expect(response).to_contain("Count: 0")
+        expect(response).to_contain("Name: None")
+        expect(response.success).to_be_true()
+    
+    def test_first_message(self, senytl_agent):
+        """Test agent response to first message"""
+        
+        def first_message_agent(message: str) -> str:
+            agent = ChatAgent()
+            return agent.process_message(message)
+        
+        wrapped = senytl_agent(first_message_agent)
+        response = wrapped.run("Hello there!")
+        
+        expect(response).to_contain("Hello!")
+        expect(response).to_contain("Hello there!")
+        expect(response.success).to_be_true()
+    
+    def test_name_extraction(self, senytl_agent):
+        """Test that agent can extract and remember user name"""
+        
+        def name_agent(message: str) -> str:
+            agent = ChatAgent()
+            if "my name is" in message.lower():
+                # First interaction - provide name
+                return agent.process_message(message)
+            else:
+                # Subsequent interaction - should remember name
+                return agent.process_message(message)
+        
+        wrapped = senytl_agent(name_agent)
+        
+        # First interaction - provide name
+        response1 = wrapped.run("Hi, my name is Alice")
+        expect(response1).to_contain("Nice to meet you, Alice!")
+        expect(response1.success).to_be_true()
+        
+        # Second interaction - check if name is remembered
+        response2 = wrapped.run("How are you?")
+        expect(response2).to_contain("Alice")
+        expect(response2.success).to_be_true()
+    
+    def test_conversation_counting(self, senytl_agent):
+        """Test that conversation count increments correctly"""
+        
+        def counting_agent(message: str) -> str:
+            agent = ChatAgent()
+            return agent.process_message(message)
+        
+        wrapped = senytl_agent(counting_agent)
+        
+        # First message
+        response1 = wrapped.run("Message 1")
+        expect(response1).to_contain("Hello!")
+        
+        # Second message
+        response2 = wrapped.run("Message 2")
+        expect(response2).to_contain("You said: Message 2")
+        
+        # Third message
+        response3 = wrapped.run("Message 3")
+        expect(response3).to_contain("You said: Message 3")
+        
+        # All responses should be successful
+        expect(response1.success).to_be_true()
+        expect(response2.success).to_be_true()
+        expect(response3.success).to_be_true()
+    
+    def test_various_input_formats(self, senytl_agent):
+        """Test agent with different input formats"""
+        
+        def format_agent(message: str) -> str:
+            agent = ChatAgent()
+            return agent.process_message(message)
+        
+        wrapped = senytl_agent(format_agent)
+        
+        # Test with empty message
+        response = wrapped.run("")
+        expect(response).to_contain("Hello!")
+        
+        # Test with long message
+        long_message = "This is a very long message " * 10
+        response = wrapped.run(long_message)
+        expect(response).to_contain(long_message[:50])  # Should contain start of message
+        
+        # Test with special characters
+        response = wrapped.run("Hello! @#$%^&*()")
+        expect(response.success).to_be_true()
+    
+    @pytest.mark.parametrize("name,expected_greeting", [
+        ("Alice", "Nice to meet you, Alice!"),
+        ("Bob", "Nice to meet you, Bob!"),
+        ("Charlie", "Nice to meet you, Charlie!"),
+    ])
+    def test_name_variations(self, senytl_agent, name, expected_greeting):
+        """Test name extraction with various names"""
+        
+        def name_variation_agent(message: str) -> str:
+            agent = ChatAgent()
+            return agent.process_message(message)
+        
+        wrapped = senytl_agent(name_variation_agent)
+        response = wrapped.run(f"Hi, my name is {name}")
+        
+        expect(response).to_contain(expected_greeting)
+        expect(response.success).to_be_true()
+    
+    def test_error_handling(self, senytl_agent):
+        """Test agent behavior with problematic inputs"""
+        
+        def error_agent(message: str) -> str:
+            agent = ChatAgent()
+            # Simulate potential errors
+            if message == "error":
+                raise ValueError("Simulated error")
+            return agent.process_message(message)
+        
+        wrapped = senytl_agent(error_agent)
+        
+        # Test normal operation
+        response = wrapped.run("normal message")
+        expect(response.success).to_be_true()
+        
+        # Test error case
+        response = wrapped.run("error")
+        expect(response.success).to_be_false()
+        expect(response.error).to_contain("Simulated error")
+    
+    def test_persistence_across_calls(self, senytl_agent):
+        """Test that agent state persists across multiple calls"""
+        
+        def state_agent(message: str) -> str:
+            agent = ChatAgent()
+            return agent.process_message(message)
+        
+        wrapped = senytl_agent(state_agent)
+        
+        # Set name in first call
+        response1 = wrapped.run("My name is David")
+        expect(response1).to_contain("David")
+        
+        # Verify name persists in second call
+        response2 = wrapped.run("What's my name?")
+        expect(response2).to_contain("David")
+        
+        # Test conversation counting across calls
+        response3 = wrapped.run("Count this")
+        response4 = wrapped.run("Count this too")
+        
+        # The responses should show it's not the first message
+        expect(response3).not_to_contain("Hello!")
+        expect(response4).not_to_contain("Hello!")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Running the Tests</h2>
+                    <p>Run the tests with different options:</p>
+                    
+                    <h3>Basic Test Run</h3>
+                    <div class="code-block">
+                        <pre><code class="language-bash"># Run the specific test file
+pytest test_chat_agent.py -v
+
+# Run with verbose output
+pytest test_chat_agent.py -v -s</code></pre>
+                    </div>
+
+                    <h3>Test with Coverage</h3>
+                    <div class="code-block">
+                        <pre><code class="language-bash"># Run with coverage tracking
+pytest test_chat_agent.py --senytl-coverage
+
+# Run with detailed coverage report
+pytest test_chat_agent.py --senytl-coverage --cov-report=html --cov-report=term
+
+# Run specific test method
+pytest test_chat_agent.py::TestChatAgent::test_name_extraction -v</code></pre>
+                    </div>
+
+                    <h3>Performance Testing</h3>
+                    <div class="code-block">
+                        <pre><code class="language-bash"># Run with performance tracking
+pytest test_chat_agent.py --senytl-performance
+
+# Run with specific markers
+pytest test_chat_agent.py -m "not slow" --senytl-coverage</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Test Results</h2>
+                    <p>When you run the tests, you should see output like:</p>
+                    <div class="code-block">
+                        <pre><code class="language-bash">========================= test session starts =========================
+collected 8 items
+
+test_chat_agent.py::TestChatAgent::test_initial_state PASSED           [ 12%]
+test_chat_agent.py::TestChatAgent::test_first_message PASSED           [ 25%]
+test_chat_agent.py::TestChatAgent::test_name_extraction PASSED         [ 37%]
+test_chat_agent.py::TestChatAgent::test_conversation_counting PASSED   [ 50%]
+test_chat_agent.py::TestChatAgent::test_various_input_formats PASSED   [ 62%]
+test_chat_agent.py::TestChatAgent::test_name_variations[0] PASSED      [ 75%]
+test_chat_agent.py::TestChatAgent::test_name_variations[1] PASSED      [ 87%]
+test_chat_agent.py::TestChatAgent::test_name_variations[2] PASSED      [100%]
+
+========================= 8 passed in 0.45s =========================</code></pre>
+                    </div>
+
+                    <p>With coverage tracking:</p>
+                    <div class="code-block">
+                        <pre><code class="language-bash">Senytl Coverage Report
+======================
+
+Agent: ChatAgent
+Methods Tested: 1/1 (100%)
+Branches Tested: 3/3 (100%)
+Input Variants: 12 different inputs tested
+
+Coverage Details:
+- process_message: 100% (5/5 branches covered)
+- Edge cases: All tested
+- Error handling: Tested</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Key Learnings</h2>
+                    <ul>
+                        <li><strong>State Management:</strong> The agent correctly maintains state across calls</li>
+                        <li><strong>Input Validation:</strong> Different input formats are handled appropriately</li>
+                        <li><strong>Coverage Tracking:</strong> Senytl automatically tracks which code paths are tested</li>
+                        <li><strong>Error Handling:</strong> Tests verify both success and failure scenarios</li>
+                        <li><strong>Parameterization:</strong> Multiple test cases can be run with the same logic</li>
+                        <li><strong>Assertions:</strong> Various assertion types ensure comprehensive validation</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Next Steps</h2>
+                    <p>Now that you've seen basic testing, explore more advanced topics:</p>
+                    <ul>
+                        <li><a href="performance-testing.html">Performance Testing</a> - Benchmark agent performance</li>
+                        <li><a href="state-testing.html">State Testing</a> - Test stateful agent behavior</li>
+                        <li><a href="../docs/assertions.html">Advanced Assertions</a> - Semantic and behavioral testing</li>
+                        <li><a href="../docs/coverage.html">Coverage Tracking</a> - Monitor test coverage</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="logo-icon">🧪</span>
+                        <span class="logo-text">Senytl</span>
+                    </div>
+                    <p>Deterministic, fast testing utilities for LLM agents</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="../docs/installation.html">Installation</a></li>
+                        <li><a href="../docs/quickstart.html">Quick Start</a></li>
+                        <li><a href="../docs/testing.html">Documentation</a></li>
+                        <li><a href="../index.html#examples">Examples</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/senytl/senytl">GitHub</a></li>
+                        <li><a href="https://github.com/senytl/senytl/issues">Issues</a></li>
+                        <li><a href="https://pypi.org/project/senytl/">PyPI</a></li>
+                        <li><a href="https://github.com/senytl/senytl/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>License</h4>
+                    <p>MIT License</p>
+                    <p>© 2024 Senytl Contributors</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Built with ❤️ for the LLM testing community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+    <style>
+        .doc-header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .doc-breadcrumb {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .doc-breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .doc-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .doc-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+        
+        .doc-content {
+            max-width: 900px;
+        }
+        
+        .doc-section {
+            margin-bottom: 3rem;
+        }
+        
+        .doc-section h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .doc-section h3 {
+            margin: 2rem 0 1rem 0;
+            color: var(--text-primary);
+        }
+        
+        .doc-section p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        .doc-section ul {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .doc-section li {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .doc-section code {
+            background: var(--bg-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--primary-color);
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coverage Tracking - Senytl</title>
+    <meta name="description" content="Monitor LLM agents with test coverage for Senytl. Track tool usage, conversation paths, input diversity, and quality metrics.">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-icon">🧪</span>
+                    <span class="logo-text">Senytl</span>
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html#getting-started" class="nav-link">Getting Started</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#features" class="nav-link">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#docs" class="nav-link">Documentation</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#examples" class="nav-link">Examples</a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://github.com/senytl/senytl" class="nav-link">GitHub</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="span"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main style="margin-top: 4rem; padding: 2rem 0;">
+        <div class="container">
+            <div class="doc-header">
+                <nav class="doc-breadcrumb">
+                    <a href="../index.html">Home</a> / <a href="quickstart.html">Quick Start</a> / <span>Coverage Tracking</span>
+                </nav>
+                <h1>Coverage & Quality Metrics</h1>
+                <p class="doc-description">Monitor test coverage for LLM agents with comprehensive metrics including tool usage, conversation paths, input diversity, and quality scores.</p>
+            </div>
+
+            <div class="doc-content">
+                <section class="doc-section">
+                    <h2>Overview</h2>
+                    <p>Senytl's coverage tracking goes beyond traditional code coverage to provide comprehensive insights into LLM agent testing:</p>
+                    <ul>
+                        <li><strong>Tool Coverage:</strong> Track which tools and functions your agent uses</li>
+                        <li><strong>Conversation Paths:</strong> Monitor different interaction scenarios tested</li>
+                        <li><strong>Input Diversity:</strong> Measure variety in test inputs and edge cases</li>
+                        <li><strong>Decision Branches:</strong> Track logic paths exercised in your agent</li>
+                        <li><strong>Quality Scores:</strong> Automated assessment of test quality and completeness</li>
+                        <li><strong>Performance Coverage:</strong> Ensure performance-critical paths are tested</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Basic Coverage Tracking</h2>
+                    <p>Enable coverage tracking with the <code>--senytl-coverage</code> flag:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="code-title">Terminal</span>
+                        </div>
+                        <pre><code class="language-bash"># Run tests with coverage tracking
+pytest test_my_agent.py --senytl-coverage
+
+# Run with detailed coverage report
+pytest test_my_agent.py --senytl-coverage --cov-report=html
+
+# Run with CI mode for automated reporting
+pytest test_my_agent.py --senytl-coverage --ci</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Coverage Metrics</h2>
+                    
+                    <h3>Tool Coverage</h3>
+                    <p>Track which tools and functions your agent uses during testing:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">from senytl import coverage
+
+# Get coverage tracker
+tracker = coverage.get_coverage_tracker()
+
+# Generate tool coverage report
+tool_coverage = tracker.get_tool_coverage()
+print("Tool Coverage Report:")
+print(f"Total tools: {tool_coverage.total_tools}")
+print(f"Tools used: {tool_coverage.tools_used}")
+print(f"Coverage: {tool_coverage.coverage_percentage:.1f}%")
+
+# Detailed tool usage
+for tool_name, usage_count in tool_coverage.usage_details.items():
+    print(f"  {tool_name}: {usage_count} calls")</code></pre>
+                    </div>
+
+                    <h3>Conversation Path Coverage</h3>
+                    <p>Monitor different interaction scenarios tested:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Track conversation paths
+conversation_coverage = tracker.get_conversation_path_coverage()
+print("Conversation Path Coverage:")
+print(f"Total paths discovered: {conversation_coverage.total_paths}")
+print(f"Paths tested: {conversation_coverage.paths_tested}")
+print(f"Path coverage: {conversation_coverage.coverage_percentage:.1f}%")
+
+# List untested paths
+for path in conversation_coverage.untested_paths:
+    print(f"  Missing: {path.description}")
+    print(f"    Scenario: {path.scenario}")
+    print(f"    Required inputs: {path.required_inputs}")</code></pre>
+                    </div>
+
+                    <h3>Input Diversity Metrics</h3>
+                    <p>Measure variety in test inputs and edge cases:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Analyze input diversity
+input_diversity = tracker.get_input_diversity()
+print("Input Diversity Analysis:")
+print(f"Total unique inputs: {input_diversity.unique_inputs}")
+print(f"Input categories covered: {input_diversity.categories_covered}")
+print(f"Edge cases tested: {input_diversity.edge_cases}")
+print(f"Diversity score: {input_diversity.diversity_score:.2f}/1.0")
+
+# Category breakdown
+for category, count in input_diversity.category_breakdown.items():
+    print(f"  {category}: {count} inputs")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Coverage Configuration</h2>
+                    <p>Configure coverage tracking in your settings:</p>
+                    
+                    <h3>Basic Configuration</h3>
+                    <div class="code-block">
+                        <pre><code class="language-toml">[tool.senytl.coverage]
+enabled = true
+report_format = "html"
+output_directory = "coverage_reports"
+min_coverage_threshold = 80.0
+
+[tool.senytl.coverage.tracking]
+tool_coverage = true
+conversation_paths = true
+input_diversity = true
+decision_branches = true
+performance_metrics = true</code></pre>
+                    </div>
+
+                    <h3>Advanced Coverage Settings</h3>
+                    <div class="code-block">
+                        <pre><code class="language-toml">[tool.senytl.coverage.advanced]
+track_api_calls = true
+track_model_usage = true
+track_token_usage = true
+track_cost_metrics = true
+analyze_prompt_patterns = true
+detect_test_redundancy = true
+
+[tool.senytl.coverage.thresholds]
+min_tool_coverage = 70.0
+min_conversation_coverage = 60.0
+min_input_diversity = 0.6
+max_test_redundancy = 0.3</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Coverage Reports</h2>
+                    
+                    <h3>Generate Different Report Formats</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">from senytl import coverage
+
+tracker = coverage.get_coverage_tracker()
+
+# Generate HTML report (default)
+tracker.generate_report(format="html", output_file="coverage_report.html")
+
+# Generate JSON report for CI/CD
+tracker.generate_report(format="json", output_file="coverage_data.json")
+
+# Generate terminal report
+tracker.generate_report(format="terminal")
+
+# Generate markdown report
+tracker.generate_report(format="markdown", output_file="coverage_summary.md")
+
+# Generate comprehensive report with all metrics
+tracker.generate_report(
+    format="comprehensive",
+    output_file="full_coverage_report.html",
+    include_details=True,
+    include_recommendations=True
+)</code></pre>
+                    </div>
+
+                    <h3>CI Integration</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python"># CI-specific coverage reporting
+def check_coverage_requirements():
+    tracker = coverage.get_coverage_tracker()
+    report = tracker.generate_report(format="json")
+    
+    # Check minimum coverage requirements
+    requirements = {
+        "tool_coverage": 70.0,
+        "conversation_coverage": 60.0,
+        "input_diversity": 0.6,
+        "overall_quality": 75.0
+    }
+    
+    violations = []
+    for metric, required in requirements.items():
+        actual = report.metrics.get(metric, 0)
+        if actual < required:
+            violations.append(f"{metric}: {actual:.1f}% < {required:.1f}%")
+    
+    if violations:
+        print("Coverage requirements not met:")
+        for violation in violations:
+            print(f"  ❌ {violation}")
+        return False
+    else:
+        print("✅ All coverage requirements met")
+        return True</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Improving Coverage</h2>
+                    
+                    <h3>Coverage Analysis and Suggestions</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">from senytl import coverage
+
+# Get coverage analysis and improvement suggestions
+tracker = coverage.get_coverage_tracker()
+analysis = tracker.analyze_coverage_gaps()
+
+print("Coverage Analysis:")
+print(f"Overall score: {analysis.overall_score:.1f}/100")
+print(f"Coverage level: {analysis.coverage_level}")
+
+print("\nImprovement Suggestions:")
+for suggestion in analysis.suggestions:
+    print(f"  • {suggestion.title}")
+    print(f"    {suggestion.description}")
+    print(f"    Priority: {suggestion.priority}")
+    print(f"    Impact: {suggestion.estimated_improvement:.1f}%")
+
+# Get specific recommendations for untested areas
+for gap in analysis.coverage_gaps:
+    print(f"\nGap in {gap.area}:")
+    print(f"  Current coverage: {gap.current_coverage:.1f}%")
+    print(f"  Missing: {gap.missing_elements}")
+    print(f"  Recommended tests: {gap.recommended_tests}")</code></pre>
+                    </div>
+
+                    <h3>Test Generation Based on Coverage</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Generate additional tests to improve coverage
+from senytl import generation
+
+# Generate tests for low-coverage areas
+missing_tests = generation.generate_tests_for_coverage_gaps(
+    agent_file="my_agent.py",
+    coverage_data="coverage_data.json",
+    target_coverage=85.0
+)
+
+# Generate specific test types
+test_cases = generation.generate_comprehensive_tests(
+    agent_file="my_agent.py",
+    test_types=["edge_cases", "error_handling", "performance"],
+    min_input_variety=10
+)
+
+# Save generated tests
+for test_case in test_cases:
+    with open(f"generated_{test_case.name}.py", "w") as f:
+        f.write(test_case.code)</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Advanced Coverage Features</h2>
+                    
+                    <h3>Real-time Coverage Monitoring</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">import time
+from senytl import coverage
+
+# Set up real-time coverage monitoring
+tracker = coverage.get_coverage_tracker()
+monitor = coverage.RealtimeMonitor(tracker)
+
+# Start monitoring
+monitor.start()
+
+# Your test code here
+def run_tests():
+    # Tests will be monitored in real-time
+    pass
+
+# Stop monitoring and get live coverage
+coverage_data = monitor.stop()
+print(f"Live coverage: {coverage_data.overall_coverage:.1f}%")
+
+# Get coverage trends
+trends = monitor.get_coverage_trends()
+print(f"Coverage trend: {trends.direction} ({trends.change_rate:.1f}% per test)")</code></pre>
+                    </div>
+
+                    <h3>Coverage Baselines and Comparisons</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Create coverage baseline
+baseline = tracker.create_baseline("v1.0_coverage")
+tracker.save_baseline(baseline, "baselines/v1.0.json")
+
+# Compare current coverage to baseline
+current_coverage = tracker.get_current_coverage()
+comparison = tracker.compare_to_baseline(baseline)
+
+print(f"Baseline coverage: {baseline.overall_coverage:.1f}%")
+print(f"Current coverage: {current_coverage.overall_coverage:.1f}%")
+print(f"Change: {comparison.change:+.1f}%")
+
+if comparison.regression:
+    print("⚠️  Coverage regression detected!")
+    for metric, change in comparison.regression_details.items():
+        print(f"  {metric}: {change:.1f}% decrease")
+else:
+    print("✅ No coverage regressions")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Coverage in Different Testing Scenarios</h2>
+                    
+                    <h3>Unit Test Coverage</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Unit test coverage focuses on individual functions/methods
+@pytest.mark.senytl_agent
+def test_agent_functions_coverage(senytl_agent):
+    """Test coverage for individual agent functions"""
+    
+    def unit_test_agent(input_data: dict) -> str:
+        if "name" in input_data:
+            return process_name(input_data["name"])
+        elif "age" in input_data:
+            return process_age(input_data["age"])
+        else:
+            return "No valid data"
+    
+    wrapped = senytl_agent(unit_test_agent)
+    
+    # Test each code path
+    response1 = wrapped.run({"name": "Alice"})
+    response2 = wrapped.run({"age": 30})
+    response3 = wrapped.run({"invalid": "data"})
+    
+    # This will track coverage of process_name, process_age, and error handling</code></pre>
+                    </div>
+
+                    <h3>Integration Test Coverage</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Integration test coverage focuses on agent workflows
+@pytest.mark.senytl_agent
+def test_agent_workflow_coverage(senytl_agent):
+    """Test coverage for complete agent workflows"""
+    
+    def workflow_agent(user_input: str) -> str:
+        # Multi-step workflow
+        parsed = parse_input(user_input)
+        validated = validate_parsed_data(parsed)
+        processed = process_validated_data(validated)
+        return format_response(processed)
+    
+    wrapped = senytl_agent(workflow_agent)
+    
+    # Test complete workflows
+    test_inputs = [
+        "user registration data",
+        "search query",
+        "configuration update",
+        "error scenario"
+    ]
+    
+    for input_data in test_inputs:
+        response = wrapped.run(input_data)
+        # Tracks coverage across the entire workflow</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Best Practices</h2>
+                    <ul>
+                        <li><strong>Set realistic coverage targets:</strong> 80-90% is often sufficient for LLM agents</li>
+                        <li><strong>Focus on meaningful coverage:</strong> Prioritize testing critical user journeys</li>
+                        <li><strong>Monitor trends over absolute values:</strong> Coverage improvements over time matter most</li>
+                        <li><strong>Use coverage data to guide testing:</strong> Let coverage gaps inform your test strategy</li>
+                        <li><strong>Combine with other metrics:</strong> Coverage is just one aspect of test quality</li>
+                        <li><strong>Automate coverage reporting:</strong> Integrate coverage checks into your CI/CD pipeline</li>
+                        <li><strong>Regular baseline comparisons:</strong> Track coverage trends across releases</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Next Steps</h2>
+                    <p>Continue exploring advanced testing capabilities:</p>
+                    <ul>
+                        <li><a href="ci.html">CI/CD Integration</a> - Automate coverage reporting in pipelines</li>
+                        <li><a href="performance.html">Performance Testing</a> - Test performance-critical code paths</li>
+                        <li><a href="generation.html">Test Generation</a> - Automatically generate tests for coverage gaps</li>
+                        <li><a href="cli.html">CLI Commands</a> - Use command-line tools for coverage analysis</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="logo-icon">🧪</span>
+                        <span class="logo-text">Senytl</span>
+                    </div>
+                    <p>Deterministic, fast testing utilities for LLM agents</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="installation.html">Installation</a></li>
+                        <li><a href="quickstart.html">Quick Start</a></li>
+                        <li><a href="testing.html">Documentation</a></li>
+                        <li><a href="../index.html#examples">Examples</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/senytl/senytl">GitHub</a></li>
+                        <li><a href="https://github.com/senytl/senytl/issues">Issues</a></li>
+                        <li><a href="https://pypi.org/project/senytl/">PyPI</a></li>
+                        <li><a href="https://github.com/senytl/senytl/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>License</h4>
+                    <p>MIT License</p>
+                    <p>© 2024 Senytl Contributors</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Built with ❤️ for the LLM testing community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+    <style>
+        .doc-header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .doc-breadcrumb {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .doc-breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .doc-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .doc-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+        
+        .doc-content {
+            max-width: 800px;
+        }
+        
+        .doc-section {
+            margin-bottom: 3rem;
+        }
+        
+        .doc-section h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .doc-section h3 {
+            margin: 2rem 0 1rem 0;
+            color: var(--text-primary);
+        }
+        
+        .doc-section p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        .doc-section ul {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .doc-section li {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .doc-section code {
+            background: var(--bg-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--primary-color);
+        }
+    </style>
+</body>
+</html>

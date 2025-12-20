@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Testing - Senytl</title>
+    <meta name="description" content="Learn how to test LLM agent performance with Senytl. Benchmark latency, throughput, cost, and SLA compliance testing.">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-icon">🧪</span>
+                    <span class="logo-text">Senytl</span>
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html#getting-started" class="nav-link">Getting Started</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#features" class="nav-link">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#docs" class="nav-link">Documentation</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#examples" class="nav-link">Examples</a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://github.com/senytl/senytl" class="nav-link">GitHub</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main style="margin-top: 4rem; padding: 2rem 0;">
+        <div class="container">
+            <div class="doc-header">
+                <nav class="doc-breadcrumb">
+                    <a href="../index.html">Home</a> / <a href="quickstart.html">Quick Start</a> / <span>Performance Testing</span>
+                </nav>
+                <h1>Performance Testing</h1>
+                <p class="doc-description">Benchmark latency, throughput, cost, and resource usage with comprehensive performance metrics.</p>
+            </div>
+
+            <div class="doc-content">
+                <section class="doc-section">
+                    <h2>Performance Overview</h2>
+                    <p>Senytl provides comprehensive performance testing capabilities for LLM agents, including:</p>
+                    <ul>
+                        <li><strong>Latency Benchmarking:</strong> Track response times across different percentiles</li>
+                        <li><strong>Throughput Testing:</strong> Measure requests per second and concurrent performance</li>
+                        <li><strong>Cost Analysis:</strong> Monitor token usage and estimate API costs</li>
+                        <li><strong>Resource Monitoring:</strong> Track memory usage and detect leaks</li>
+                        <li><strong>SLA Compliance:</strong> Assert performance requirements in tests</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Basic Performance Benchmarking</h2>
+                    <p>Use the <code>@performance.benchmark</code> decorator to automatically track performance metrics:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">import time
+from senytl import performance
+
+@performance.benchmark
+def my_llm_agent(prompt: str):
+    # Simulate LLM processing time
+    time.sleep(0.5)  # 500ms response time
+    return f"Response to: {prompt}"
+
+# Run the agent
+response = my_llm_agent("test prompt")
+
+# Access performance metrics
+print(f"Latency: {response.latency:.3f}s")
+print(f"Tokens: {response.tokens_used}")
+print(f"Cost: ${response.cost_estimate:.4f}")
+print(f"Memory usage: {response.memory_usage:.2f}MB")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Performance Assertions</h2>
+                    <p>Assert SLA compliance with built-in performance assertions:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">import pytest
+from senytl import expect_performance
+
+@pytest.mark.senytl_agent
+def test_sla_compliance(senytl_agent):
+    def slow_agent(prompt: str) -> str:
+        time.sleep(1.0)  # 1 second response
+        return f"Processed: {prompt}"
+    
+    wrapped = senytl_agent(slow_agent)
+    response = wrapped.run("test")
+    
+    # Assert latency requirements
+    response.assert_latency_under(2.0)  # Must complete within 2 seconds
+    response.assert_p95_latency_under(1.5)  # 95th percentile under 1.5s
+    response.assert_p99_latency_under(2.0)  # 99th percentile under 2s
+    
+    # Assert throughput requirements
+    response.assert_throughput_above(0.5)  # At least 0.5 req/s
+    
+    # Assert cost requirements
+    response.assert_cost_under(0.05)  # Less than $0.05 per request
+    response.assert_token_usage_under(1000, per_request=True)</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Load Testing</h2>
+                    <p>Test your agent under concurrent load with the <code>@performance.load_test</code> decorator:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">import pytest
+from senytl import performance
+
+# Load test with 10 concurrent users for 60 seconds
+@performance.load_test(concurrent_users=10, duration=60)
+def test_concurrent_performance():
+    def concurrent_agent(prompt: str) -> str:
+        # Simulate some processing
+        time.sleep(0.1)
+        return f"Concurrent response: {prompt}"
+    
+    wrapped = performance.wrap_agent(concurrent_agent)
+    
+    # Test multiple requests
+    for i in range(100):
+        response = wrapped.run(f"Request {i}")
+        expect(response.success).to_be_true()
+        
+    return wrapped</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Memory Leak Detection</h2>
+                    <p>Automatically detect memory leaks in your agent:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">@performance.benchmark
+def memory_test_agent(prompt: str):
+    # This agent might have memory leaks
+    data = [i for i in range(1000)]  # Create some data
+    return f"Processed {len(data)} items"
+
+def test_no_memory_leaks():
+    initial_memory = performance.get_memory_usage()
+    
+    # Run agent multiple times
+    for _ in range(100):
+        response = memory_test_agent("test")
+        expect(response.success).to_be_true()
+    
+    final_memory = performance.get_memory_usage()
+    
+    # Assert memory usage didn't grow by more than 20%
+    memory_growth = (final_memory - initial_memory) / initial_memory
+    assert memory_growth < 0.20, f"Memory growth: {memory_growth:.2%}"
+    
+    # Or use the built-in assertion
+    response = memory_test_agent("final test")
+    response.assert_no_memory_leaks(threshold=0.20)</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Performance Metrics</h2>
+                    <p>Access detailed performance metrics from the response object:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">response = my_llm_agent("test prompt")
+
+# Basic metrics
+print(f"Success: {response.success}")
+print(f"Output: {response.output}")
+print(f"Error: {response.error}")
+
+# Performance metrics
+print(f"Latency: {response.latency:.3f}s")
+print(f"Tokens used: {response.tokens_used}")
+print(f"Cost estimate: ${response.cost_estimate:.4f}")
+print(f"Memory usage: {response.memory_usage:.2f}MB")
+
+# Detailed metrics
+metrics = response.performance_metrics
+print(f"Average latency: {metrics.avg_latency:.3f}s")
+print(f"P50 latency: {metrics.p50_latency:.3f}s")
+print(f"P95 latency: {metrics.p95_latency:.3f}s")
+print(f"P99 latency: {metrics.p99_latency:.3f}s")
+print(f"Max latency: {metrics.max_latency:.3f}s")
+print(f"Throughput: {metrics.throughput:.2f} req/s")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Cost Estimation</h2>
+                    <p>Senytl automatically estimates costs based on model pricing:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Configure cost estimation in your settings
+@performance.benchmark
+def cost_tracked_agent(prompt: str):
+    # This will automatically track token usage and costs
+    return "Detailed response with more tokens"
+
+# Access cost information
+response = cost_tracked_agent("test")
+print(f"Input tokens: {response.input_tokens}")
+print(f"Output tokens: {response.output_tokens}")
+print(f"Total tokens: {response.tokens_used}")
+print(f"Estimated cost: ${response.cost_estimate:.4f}")
+
+# Assert cost requirements
+response.assert_cost_under(0.01)  # Less than 1 cent per request</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Performance Reporting</h2>
+                    <p>Generate comprehensive performance reports:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">from senytl import performance
+
+# Generate performance report
+metrics = performance.get_metrics()
+
+# Generate reports in different formats
+performance.generate_report(metrics, format="text")    # Human-readable text
+performance.generate_report(metrics, format="json")    # Machine-readable JSON
+performance.generate_report(metrics, format="markdown") # Markdown format
+
+# Save report to file
+performance.generate_report(metrics, output_file="performance_report.html", format="html")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Custom Performance Metrics</h2>
+                    <p>Define custom performance metrics for your specific use case:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">from senytl import performance
+from senytl.models import PerformanceMetrics
+
+class CustomMetrics(PerformanceMetrics):
+    def __init__(self):
+        super().__init__()
+        self.custom_timer = 0
+        self.custom_counter = 0
+    
+    def start_custom_operation(self):
+        self.custom_timer = time.time()
+    
+    def end_custom_operation(self):
+        self.custom_counter += 1
+        return time.time() - self.custom_timer
+
+# Use custom metrics
+@performance.benchmark(metrics_class=CustomMetrics)
+def custom_performance_agent(prompt: str):
+    wrapped = CustomMetrics()
+    
+    wrapped.start_custom_operation()
+    # Your agent logic here
+    time.sleep(0.2)
+    duration = wrapped.end_custom_operation()
+    
+    return f"Custom metric: {duration:.3f}s"</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Best Practices</h2>
+                    <ul>
+                        <li><strong>Set realistic performance targets:</strong> Base SLA requirements on actual usage patterns</li>
+                        <li><strong>Test under realistic load:</strong> Use concurrent users and realistic request patterns</li>
+                        <li><strong>Monitor memory usage:</strong> Detect leaks early with automated memory monitoring</li>
+                        <li><strong>Track costs continuously:</strong> Set budget alerts based on estimated costs</li>
+                        <li><strong>Use percentiles for latency:</strong> P95 and P99 latencies give better user experience insights</li>
+                        <li><strong>Run performance tests regularly:</strong> Catch performance regressions before production</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Performance Configuration</h2>
+                    <p>Configure performance testing settings:</p>
+                    <div class="code-block">
+                        <pre><code class="language-toml">[tool.senytl.performance]
+enabled = true
+default_timeout = 30.0
+max_concurrent_requests = 50
+cost_tracking = true
+memory_monitoring = true
+
+[tool.senytl.performance.thresholds]
+max_latency = 5.0
+max_cost_per_request = 0.10
+max_memory_growth = 0.20
+min_throughput = 1.0</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Next Steps</h2>
+                    <p>Continue exploring advanced testing features:</p>
+                    <ul>
+                        <li><a href="state.html">State Persistence</a> - Test stateful agents</li>
+                        <li><a href="multi-agent.html">Multi-Agent Testing</a> - Test complex agent systems</li>
+                        <li><a href="coverage.html">Coverage Tracking</a> - Monitor test coverage</li>
+                        <li><a href="ci.html">CI/CD Integration</a> - Automate testing in pipelines</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="logo-icon">🧪</span>
+                        <span class="logo-text">Senytl</span>
+                    </div>
+                    <p>Deterministic, fast testing utilities for LLM agents</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="installation.html">Installation</a></li>
+                        <li><a href="quickstart.html">Quick Start</a></li>
+                        <li><a href="testing.html">Documentation</a></li>
+                        <li><a href="../index.html#examples">Examples</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/senytl/senytl">GitHub</a></li>
+                        <li><a href="https://github.com/senytl/senytl/issues">Issues</a></li>
+                        <li><a href="https://pypi.org/project/senytl/">PyPI</a></li>
+                        <li><a href="https://github.com/senytl/senytl/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>License</h4>
+                    <p>MIT License</p>
+                    <p>© 2024 Senytl Contributors</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Built with ❤️ for the LLM testing community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+    <style>
+        .doc-header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .doc-breadcrumb {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .doc-breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .doc-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .doc-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+        
+        .doc-content {
+            max-width: 800px;
+        }
+        
+        .doc-section {
+            margin-bottom: 3rem;
+        }
+        
+        .doc-section h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .doc-section h3 {
+            margin: 2rem 0 1rem 0;
+            color: var(--text-primary);
+        }
+        
+        .doc-section p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        .doc-section ul {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .doc-section li {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .doc-section code {
+            background: var(--bg-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--primary-color);
+        }
+    </style>
+</body>
+</html>

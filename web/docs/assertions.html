@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assertions Reference - Senytl</title>
+    <meta name="description" content="Complete reference for Senytl assertions. Learn all available assertion types with detailed examples and best practices.">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-icon">🧪</span>
+                    <span class="logo-text">Senytl</span>
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html#getting-started" class="nav-link">Getting Started</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#features" class="nav-link">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#docs" class="nav-link">Documentation</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#examples" class="nav-link">Examples</a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://github.com/senytl/senytl" class="nav-link">GitHub</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main style="margin-top: 4rem; padding: 2rem 0;">
+        <div class="container">
+            <div class="doc-header">
+                <nav class="doc-breadcrumb">
+                    <a href="../index.html">Home</a> / <a href="testing.html">Testing Basics</a> / <span>Assertions Reference</span>
+                </nav>
+                <h1>Assertions Reference</h1>
+                <p class="doc-description">Complete reference for all Senytl assertion types with detailed examples and best practices.</p>
+            </div>
+
+            <div class="doc-content">
+                <section class="doc-section">
+                    <h2>Overview</h2>
+                    <p>Senytl provides a comprehensive set of assertions for testing LLM agents. Assertions are used to validate that your agent behaves correctly and meets expected requirements. This reference covers all available assertion types, their usage, and best practices.</p>
+                    
+                    <div class="code-block">
+                        <pre><code class="language-python">from senytl import expect
+
+# Basic usage pattern
+response = wrapped_agent.run("test input")
+expect(response).to_contain("expected content")
+expect(response.success).to_be_true()</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Content Assertions</h2>
+                    <p>Assert that agent responses contain expected content.</p>
+                    
+                    <h3>Basic Content Assertions</h3>
+                    
+                    <h4><code>to_contain(substring)</code></h4>
+                    <p>Assert that the response contains a specific substring.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_contains_assertion(senytl_agent):
+    def test_agent(message: str) -> str:
+        return f"Processing: {message} - Complete"
+    
+    wrapped = senytl_agent(test_agent)
+    response = wrapped.run("urgent request")
+    
+    # Assert response contains expected content
+    expect(response).to_contain("Processing:")
+    expect(response).to_contain("urgent request")
+    expect(response).to_contain("Complete")
+    
+    # Case-sensitive by default
+    expect(response).not_to_contain("URGENT")  # Won't match "urgent"</code></pre>
+                    </div>
+
+                    <h4><code>to_start_with(prefix)</code></h4>
+                    <p>Assert that the response starts with a specific prefix.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_prefix_assertion(senytl_agent):
+    def greeting_agent(message: str) -> str:
+        if "hello" in message.lower():
+            return "Hello there! How can I help?"
+        return "Hi! What do you need?"
+    
+    wrapped = senytl_agent(greeting_agent)
+    response = wrapped.run("Hello world")
+    
+    # Assert response starts with greeting
+    expect(response).to_start_with("Hello there!")
+    expect(response).not_to_start_with("Hi!")</code></pre>
+                    </div>
+
+                    <h4><code>to_end_with(suffix)</code></h4>
+                    <p>Assert that the response ends with a specific suffix.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_suffix_assertion(senytl_agent):
+    def polite_agent(message: str) -> str:
+        return f"I understand: {message}. Thank you for your message."
+    
+    wrapped = senytl_agent(polite_agent)
+    response = wrapped.run("please help me")
+    
+    # Assert response ends politely
+    expect(response).to_end_with("Thank you for your message.")
+    expect(response).not_to_end_with("Goodbye.")</code></pre>
+                    </div>
+
+                    <h4><code>to_match_pattern(pattern)</code></h4>
+                    <p>Assert that the response matches a regular expression pattern.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_pattern_assertion(senytl_agent):
+    def structured_agent(message: str) -> str:
+        # Return structured response
+        return f"ORDER-{hash(message) % 1000:03d}: Processed at {message[:3].upper()}"
+    
+    wrapped = senytl_agent(structured_agent)
+    response = wrapped.run("urgent order")
+    
+    # Assert response matches order format pattern
+    expect(response).to_match_pattern(r"ORDER-\d{3}: Processed at [A-Z]{3}")
+    
+    # Assert specific patterns
+    expect(response).to_match_pattern(r"ORDER-\d{3}")  # Order ID format
+    expect(response).to_match_pattern(r"Processed at [A-Z]{3}")  # Timestamp format</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Type and Structure Assertions</h2>
+                    <p>Assert the type and structure of responses.</p>
+                    
+                    <h3>Type Assertions</h3>
+                    
+                    <h4><code>to_be_string()</code></h4>
+                    <p>Assert that the response is a string.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_type_assertions(senytl_agent):
+    def string_agent(message: str) -> str:
+        return str(message.upper())
+    
+    wrapped = senytl_agent(string_agent)
+    response = wrapped.run("test")
+    
+    # Assert response is a string
+    expect(response).to_be_string()
+    expect(response.output).to_be_string()
+    
+    # Assert response is not other types
+    expect(response).not_to_be_none()
+    expect(response).not_to_be_dict()
+    expect(response).not_to_be_list()</code></pre>
+                    </div>
+
+                    <h4><code>to_be_dict()</code></h4>
+                    <p>Assert that the response is a dictionary.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_dict_assertion(senytl_agent):
+    def json_agent(message: str) -> dict:
+        return {
+            "status": "success",
+            "message": message,
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+    
+    wrapped = senytl_agent(json_agent)
+    response = wrapped.run("test data")
+    
+    # Parse JSON response
+    import json
+    data = json.loads(response.output)
+    
+    # Assert structure
+    expect(data).to_be_dict()
+    expect(data).to_have_key("status")
+    expect(data).to_have_key("message")
+    expect(data).to_have_key("timestamp")</code></pre>
+                    </div>
+
+                    <h4><code>to_have_key(key)</code></h4>
+                    <p>Assert that a dictionary has a specific key.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_key_assertion(senytl_agent):
+    def structured_agent(message: str) -> dict:
+        return {
+            "request_id": "req_123",
+            "response_data": {"result": "success"},
+            "metadata": {"version": "1.0"}
+        }
+    
+    wrapped = senytl_agent(structured_agent)
+    response = wrapped.run("test")
+    
+    import json
+    data = json.loads(response.output)
+    
+    # Assert required keys exist
+    expect(data).to_have_key("request_id")
+    expect(data).to_have_key("response_data")
+    expect(data).to_have_key("metadata")
+    
+    # Assert nested keys
+    expect(data["response_data"]).to_have_key("result")
+    expect(data["metadata"]).to_have_key("version")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Value Comparison Assertions</h2>
+                    <p>Assert that values meet specific criteria.</p>
+                    
+                    <h3>Equality Assertions</h3>
+                    
+                    <h4><code>to_equal(value)</code></h4>
+                    <p>Assert that a value equals the expected value.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_equality_assertions(senytl_agent):
+    def exact_agent(message: str) -> str:
+        return "CONFIRMED"
+    
+    wrapped = senytl_agent(exact_agent)
+    response = wrapped.run("confirm")
+    
+    # Assert exact match
+    expect(response.output).to_equal("CONFIRMED")
+    expect(response.success).to_equal(True)
+    
+    # Test with structured data
+    def data_agent(message: str) -> dict:
+        return {"status": "processed", "count": 42}
+    
+    wrapped2 = senytl_agent(data_agent)
+    response2 = wrapped2.run("count test")
+    
+    import json
+    data = json.loads(response2.output)
+    expect(data["count"]).to_equal(42)
+    expect(data["status"]).to_equal("processed")</code></pre>
+                    </div>
+
+                    <h4><code>to_be_true()</code> and <code>to_be_false()</code></h4>
+                    <p>Assert boolean values.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_boolean_assertions(senytl_agent):
+    def boolean_agent(message: str) -> bool:
+        if "valid" in message.lower():
+            return True
+        elif "invalid" in message.lower():
+            return False
+        return True  # Default
+    
+    wrapped = senytl_agent(boolean_agent)
+    
+    # Test true case
+    response1 = wrapped.run("this is valid")
+    expect(response1.success).to_be_true()
+    
+    # Test false case  
+    response2 = wrapped.run("this is invalid")
+    expect(response2.success).to_be_false()
+    
+    # Test with custom boolean agent
+    def custom_bool_agent(message: str) -> dict:
+        return {"success": len(message) > 5}
+    
+    wrapped3 = senytl_agent(custom_bool_agent)
+    response3 = wrapped3.run("long enough")
+    
+    import json
+    data = json.loads(response3.output)
+    expect(data["success"]).to_be_true()</code></pre>
+                    </div>
+
+                    <h3>Numeric Assertions</h3>
+                    
+                    <h4><code>to_be_greater_than(number)</code></h4>
+                    <p>Assert that a numeric value is greater than expected.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_numeric_greater_than(senytl_agent):
+    def counting_agent(message: str) -> dict:
+        return {
+            "word_count": len(message.split()),
+            "char_count": len(message),
+            "processed": True
+        }
+    
+    wrapped = senytl_agent(counting_agent)
+    response = wrapped.run("this is a test message with multiple words")
+    
+    import json
+    data = json.loads(response.output)
+    
+    # Assert numeric values
+    expect(data["word_count"]).to_be_greater_than(5)
+    expect(data["char_count"]).to_be_greater_than(30)
+    expect(data["word_count"]).to_be_greater_than_or_equal_to(8)
+    
+    # Test with performance metrics
+    expect(response.execution_time).to_be_greater_than(0.001)  # At least 1ms</code></pre>
+                    </div>
+
+                    <h4><code>to_be_less_than(number)</code></h4>
+                    <p>Assert that a numeric value is less than expected.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_numeric_less_than(senytl_agent):
+    def fast_agent(message: str) -> str:
+        return f"Fast response: {message}"
+    
+    wrapped = senytl_agent(fast_agent)
+    response = wrapped.run("quick test")
+    
+    # Assert performance metrics
+    expect(response.execution_time).to_be_less_than(1.0)  # Less than 1 second
+    expect(response.execution_time).to_be_less_than_or_equal_to(0.5)  # Less than or equal
+    
+    # Test with cost metrics (if available)
+    if hasattr(response, 'cost_estimate'):
+        expect(response.cost_estimate).to_be_less_than(0.01)  # Less than 1 cent</code></pre>
+                    </div>
+
+                    <h4><code>to_be_between(min_value, max_value)</code></h4>
+                    <p>Assert that a numeric value is within a specific range.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_numeric_range(senytl_agent):
+    def range_agent(message: str) -> dict:
+        return {
+            "response_time": 0.5,  # seconds
+            "token_count": 150,
+            "confidence": 0.85
+        }
+    
+    wrapped = senytl_agent(range_agent)
+    response = wrapped.run("range test")
+    
+    import json
+    data = json.loads(response.output)
+    
+    # Assert values are within expected ranges
+    expect(data["response_time"]).to_be_between(0.1, 1.0)
+    expect(data["token_count"]).to_be_between(100, 200)
+    expect(data["confidence"]).to_be_between(0.8, 1.0)
+    
+    # Test with execution metrics
+    expect(response.execution_time).to_be_between(0.001, 2.0)</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Collection Assertions</h2>
+                    <p>Assert properties of collections and sequences.</p>
+                    
+                    <h3>Length Assertions</h3>
+                    
+                    <h4><code>to_have_length_greater_than(length)</code></h4>
+                    <p>Assert that a collection has more than the specified number of items.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_length_greater_than(senytl_agent):
+    def list_agent(message: str) -> list:
+        return message.split()  # Return word list
+    
+    wrapped = senytl_agent(list_agent)
+    response = wrapped.run("this is a test with multiple words")
+    
+    # Parse list response
+    import json
+    words = json.loads(response.output)
+    
+    # Assert list length
+    expect(words).to_have_length_greater_than(5)
+    expect(words).to_have_length_greater_than_or_equal_to(8)
+    
+    # Test with string length
+    def string_agent(message: str) -> str:
+        return "x" * len(message)
+    
+    wrapped2 = senytl_agent(string_agent)
+    response2 = wrapped2.run("test message")
+    
+    expect(response2.output).to_have_length_greater_than(10)</code></pre>
+                    </div>
+
+                    <h4><code>to_have_length_less_than(length)</code></h4>
+                    <p>Assert that a collection has fewer than the specified number of items.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_length_less_than(senytl_agent):
+    def concise_agent(message: str) -> str:
+        return " ".join(message.split()[:3])  # Return first 3 words only
+    
+    wrapped = senytl_agent(concise_agent)
+    response = wrapped.run("this is a test message that should be shortened")
+    
+    # Assert response is concise
+    expect(response.output).to_have_length_less_than(20)
+    expect(response.output).to_have_length_less_than_or_equal_to(15)
+    
+    # Test with token limits
+    def token_limited_agent(message: str) -> str:
+        # Simulate token limit
+        words = message.split()
+        return " ".join(words[:5])  # Limit to 5 words
+    
+    wrapped2 = senytl_agent(token_limited_agent)
+    response2 = wrapped2.run("one two three four five six seven eight nine ten")
+    
+    word_count = len(response2.output.split())
+    expect(word_count).to_be_less_than_or_equal_to(5)</code></pre>
+                    </div>
+
+                    <h4><code>to_have_length_between(min_length, max_length)</code></h4>
+                    <p>Assert that a collection has a length within a specific range.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_length_between(senytl_agent):
+    def balanced_agent(message: str) -> str:
+        words = message.split()
+        if len(words) < 3:
+            return " ".join(words * 3)  # Pad short messages
+        elif len(words) > 10:
+            return " ".join(words[:5])  # Truncate long messages
+        return message  # Keep balanced messages
+    
+    wrapped = senytl_agent(balanced_agent)
+    
+    # Test short message
+    response1 = wrapped.run("hi")
+    expect(response1.output).to_have_length_between(6, 12)  # "hi hi hi"
+    
+    # Test long message
+    response2 = wrapped.run("one two three four five six seven eight nine ten eleven twelve")
+    word_count2 = len(response2.output.split())
+    expect(word_count2).to_have_length_between(3, 7)
+    
+    # Test balanced message
+    response3 = wrapped.run("just right length message")
+    word_count3 = len(response3.output.split())
+    expect(word_count3).to_have_length_between(3, 10)</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Specialized Assertions</h2>
+                    <p>Assertions for specific testing scenarios.</p>
+                    
+                    <h3>Response Object Assertions</h3>
+                    
+                    <h4><code>to_be_empty()</code></h4>
+                    <p>Assert that a response is empty or contains no content.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_empty_response(senytl_agent):
+    def empty_agent(message: str) -> str:
+        if message.strip() == "":
+            return ""
+        elif "silent" in message.lower():
+            return ""
+        return f"Response to: {message}"
+    
+    wrapped = senytl_agent(empty_agent)
+    
+    # Test empty input
+    response1 = wrapped.run("")
+    expect(response1.output).to_be_empty()
+    
+    # Test silent command
+    response2 = wrapped.run("silent mode")
+    expect(response2.output).to_be_empty()
+    
+    # Test non-empty response
+    response3 = wrapped.run("normal message")
+    expect(response3.output).not_to_be_empty()</code></pre>
+                    </div>
+
+                    <h4><code>to_be_none()</code></h4>
+                    <p>Assert that a value is None.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_none_response(senytl_agent):
+    def none_agent(message: str) -> str:
+        if message == "none":
+            return None
+        elif message == "empty":
+            return ""
+        return f"Got: {message}"
+    
+    wrapped = senytl_agent(none_agent)
+    
+    # Test None response
+    response1 = wrapped.run("none")
+    expect(response1.output).to_be_none()
+    
+    # Test empty string (different from None)
+    response2 = wrapped.run("empty")
+    expect(response2.output).not_to_be_none()
+    expect(response2.output).to_be_empty()
+    
+    # Test normal response
+    response3 = wrapped.run("test")
+    expect(response3.output).not_to_be_none()
+    expect(response3.output).not_to_be_empty()</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Error and Exception Assertions</h2>
+                    <p>Assert that errors are handled correctly.</p>
+                    
+                    <h3>Error Handling Assertions</h3>
+                    
+                    <h4>Testing Error Cases</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_error_handling(senytl_agent):
+    def error_agent(message: str) -> str:
+        if message == "error":
+            raise ValueError("Test error occurred")
+        elif message == "timeout":
+            raise TimeoutError("Request timed out")
+        elif message == "invalid":
+            raise TypeError("Invalid input type")
+        return f"Processed: {message}"
+    
+    wrapped = senytl_agent(error_agent)
+    
+    # Test normal operation
+    response1 = wrapped.run("normal")
+    expect(response1.success).to_be_true()
+    expect(response1.error).to_be_none()
+    
+    # Test specific error types
+    response2 = wrapped.run("error")
+    expect(response2.success).to_be_false()
+    expect(response2.error).to_contain("Test error occurred")
+    
+    response3 = wrapped.run("timeout")
+    expect(response3.success).to_be_false()
+    expect(response3.error).to_contain("Request timed out")
+    
+    response4 = wrapped.run("invalid")
+    expect(response4.success).to_be_false()
+    expect(response4.error).to_contain("Invalid input type")</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Performance Assertions</h2>
+                    <p>Assert performance characteristics and SLA compliance.</p>
+                    
+                    <h3>Response Time Assertions</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_performance_assertions(senytl_agent):
+    def performance_agent(message: str) -> str:
+        import time
+        # Simulate processing time
+        processing_time = min(len(message) * 0.001, 0.1)  # Max 100ms
+        time.sleep(processing_time)
+        return f"Processed '{message}' in {processing_time:.3f}s"
+    
+    wrapped = senytl_agent(performance_agent)
+    response = wrapped.run("test message for performance")
+    
+    # Assert execution time
+    expect(response.execution_time).to_be_less_than(0.5)  # Under 500ms
+    expect(response.execution_time).to_be_greater_than(0.001)  # At least 1ms
+    
+    # Test with specific performance requirements
+    expect(response.execution_time).to_be_between(0.01, 0.2)  # Between 10ms and 200ms
+    
+    # Test throughput assertions
+    if hasattr(response, 'throughput'):
+        expect(response.throughput).to_be_greater_than(1.0)  # At least 1 req/s</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Chaining Assertions</h2>
+                    <p>Chain multiple assertions for comprehensive testing.</p>
+                    
+                    <h3>Complex Assertion Chains</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">def test_chained_assertions(senytl_agent):
+    def comprehensive_agent(message: str) -> dict:
+        return {
+            "status": "success",
+            "message": f"Processed: {message}",
+            "metadata": {
+                "word_count": len(message.split()),
+                "char_count": len(message),
+                "timestamp": "2024-01-01T00:00:00Z"
+            }
+        }
+    
+    wrapped = senytl_agent(comprehensive_agent)
+    response = wrapped.run("comprehensive test message")
+    
+    # Parse response
+    import json
+    data = json.loads(response.output)
+    
+    # Chain multiple assertions
+    expect(response.success).to_be_true()
+    expect(response.output).to_be_string()
+    expect(response.execution_time).to_be_less_than(1.0)
+    
+    # Assert nested structure
+    expect(data).to_be_dict()
+    expect(data).to_have_key("status")
+    expect(data).to_have_key("message")
+    expect(data).to_have_key("metadata")
+    
+    # Assert metadata structure
+    expect(data["metadata"]).to_have_key("word_count")
+    expect(data["metadata"]).to_have_key("char_count")
+    expect(data["metadata"]).to_have_key("timestamp")
+    
+    # Assert values
+    expect(data["status"]).to_equal("success")
+    expect(data["message"]).to_contain("comprehensive test message")
+    expect(data["metadata"]["word_count"]).to_be_greater_than(2)
+    expect(data["metadata"]["char_count"]).to_be_less_than(100)</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Best Practices</h2>
+                    
+                    <h3>Assertion Selection</h3>
+                    <ul>
+                        <li><strong>Use specific assertions:</strong> Choose the most appropriate assertion for your use case</li>
+                        <li><strong>Test both positive and negative cases:</strong> Use both regular and negated assertions</li>
+                        <li><strong>Assert important behavior:</strong> Focus on critical functionality and edge cases</li>
+                        <li><strong>Combine assertions:</strong> Use multiple assertions to thoroughly validate behavior</li>
+                    </ul>
+
+                    <h3>Performance Considerations</h3>
+                    <ul>
+                        <li><strong>Avoid expensive operations:</strong> Don't perform heavy computations in assertions</li>
+                        <li><strong>Use appropriate precision:</strong> Be realistic about numeric comparisons</li>
+                        <li><strong>Consider timing:</strong> Account for network latency and processing time</li>
+                        <li><strong>Test realistic scenarios:</strong> Use inputs that match real-world usage</li>
+                    </ul>
+
+                    <h3>Maintainability</h3>
+                    <ul>
+                        <li><strong>Keep assertions simple:</strong> Complex assertion logic can be hard to debug</li>
+                        <li><strong>Use meaningful messages:</strong> Custom assertion messages help with debugging</li>
+                        <li><strong>Group related assertions:</strong> Organize assertions in logical test methods</li>
+                        <li><strong>Update tests with code changes:</strong> Keep tests synchronized with agent updates</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Assertion Methods Reference</h2>
+                    
+                    <h3>Content Assertions</h3>
+                    <ul>
+                        <li><code>to_contain(substring)</code> - Contains substring</li>
+                        <li><code>not_to_contain(substring)</code> - Does not contain substring</li>
+                        <li><code>to_start_with(prefix)</code> - Starts with prefix</li>
+                        <li><code>to_end_with(suffix)</code> - Ends with suffix</li>
+                        <li><code>to_match_pattern(pattern)</code> - Matches regex pattern</li>
+                    </ul>
+
+                    <h3>Type Assertions</h3>
+                    <ul>
+                        <li><code>to_be_string()</code> - Is a string</li>
+                        <li><code>to_be_dict()</code> - Is a dictionary</li>
+                        <li><code>to_be_list()</code> - Is a list</li>
+                        <li><code>to_be_none()</code> - Is None</li>
+                        <li><code>to_have_key(key)</code> - Dictionary has key</li>
+                    </ul>
+
+                    <h3>Value Assertions</h3>
+                    <ul>
+                        <li><code>to_equal(value)</code> - Equals value</li>
+                        <li><code>to_be_true()</code> - Is True</li>
+                        <li><code>to_be_false()</code> - Is False</li>
+                        <li><code>to_be_greater_than(number)</code> - Greater than</li>
+                        <li><code>to_be_less_than(number)</code> - Less than</li>
+                        <li><code>to_be_between(min, max)</code> - Between range</li>
+                    </ul>
+
+                    <h3>Collection Assertions</h3>
+                    <ul>
+                        <li><code>to_have_length_greater_than(length)</code> - Length greater than</li>
+                        <li><code>to_have_length_less_than(length)</code> - Length less than</li>
+                        <li><code>to_have_length_between(min, max)</code> - Length between</li>
+                        <li><code>to_be_empty()</code> - Is empty</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Next Steps</h2>
+                    <p>Now that you understand all available assertions, explore these related topics:</p>
+                    <ul>
+                        <li><a href="tutorial.html">Complete Tutorial</a> - Hands-on learning with assertions</li>
+                        <li><a href="performance.html">Performance Testing</a> - Performance-specific assertions</li>
+                        <li><a href="testing.html">Testing Basics</a> - Integration with pytest</li>
+                        <li><a href="../examples/basic-testing.html">Basic Examples</a> - Practical assertion usage</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="logo-icon">🧪</span>
+                        <span class="logo-text">Senytl</span>
+                    </div>
+                    <p>Deterministic, fast testing utilities for LLM agents</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="installation.html">Installation</a></li>
+                        <li><a href="quickstart.html">Quick Start</a></li>
+                        <li><a href="testing.html">Documentation</a></li>
+                        <li><a href="../index.html#examples">Examples</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/senytl/senytl">GitHub</a></li>
+                        <li><a href="https://github.com/senytl/senytl/issues">Issues</a></li>
+                        <li><a href="https://pypi.org/project/senytl/">PyPI</a></li>
+                        <li><a href="https://github.com/senytl/senytl/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>License</h4>
+                    <p>MIT License</p>
+                    <p>© 2024 Senytl Contributors</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Built with ❤️ for the LLM testing community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+    <style>
+        .doc-header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .doc-breadcrumb {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .doc-breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .doc-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .doc-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+        
+        .doc-content {
+            max-width: 900px;
+        }
+        
+        .doc-section {
+            margin-bottom: 3rem;
+        }
+        
+        .doc-section h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .doc-section h3 {
+            margin: 2rem 0 1rem 0;
+            color: var(--text-primary);
+        }
+        
+        .doc-section h4 {
+            margin: 1.5rem 0 0.75rem 0;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 1rem;
+        }
+        
+        .doc-section p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        .doc-section ul {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .doc-section li {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .doc-section code {
+            background: var(--bg-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--primary-color);
+        }
+    </style>
+</body>
+</html>

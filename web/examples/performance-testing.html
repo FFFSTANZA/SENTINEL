@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Testing Example - Senytl</title>
+    <meta name="description" content="Learn how to test LLM agent performance with Senytl. Practical examples for benchmarking, SLA validation, and load testing.">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-icon">🧪</span>
+                    <span class="logo-text">Senytl</span>
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html#getting-started" class="nav-link">Getting Started</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#features" class="nav-link">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#docs" class="nav-link">Documentation</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#examples" class="nav-link">Examples</a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://github.com/senytl/senytl" class="nav-link">GitHub</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main style="margin-top: 4rem; padding: 2rem 0;">
+        <div class="container">
+            <div class="doc-header">
+                <nav class="doc-breadcrumb">
+                    <a href="../index.html">Home</a> / <a href="../index.html#examples">Examples</a> / <span>Performance Testing</span>
+                </nav>
+                <h1>Performance Testing Examples</h1>
+                <p class="doc-description">Learn how to test LLM agent performance with practical examples for benchmarking and SLA validation.</p>
+            </div>
+
+            <div class="doc-content">
+                <section class="doc-section">
+                    <h2>Overview</h2>
+                    <p>This example demonstrates comprehensive performance testing for LLM agents using Senytl. You'll learn how to:</p>
+                    <ul>
+                        <li>Measure response times and latency</li>
+                        <li>Test SLA compliance with assertions</li>
+                        <li>Conduct load testing with concurrent users</li>
+                        <li>Monitor memory usage and detect leaks</li>
+                        <li>Track cost and token usage</li>
+                        <li>Generate performance reports</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>The Example Agent</h2>
+                    <p>We'll use a customer support agent that performs various operations with different performance characteristics:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="code-title">agents/customer_support_performance.py</span>
+                        </div>
+                        <pre><code class="language-python">"""
+Customer Support Agent with Performance Testing Considerations
+This agent simulates various operations with different performance characteristics.
+"""
+import time
+import random
+from typing import Dict, List
+from dataclasses import dataclass
+import json
+
+
+@dataclass
+class OrderInfo:
+    """Order information for testing"""
+    order_id: str
+    status: str
+    customer_id: str
+    items: List[str]
+    total_amount: float
+
+
+class CustomerSupportAgent:
+    """
+    Customer support agent with performance testing features.
+    
+    This agent has different performance characteristics:
+    - Simple queries: Fast response
+    - Complex analysis: Medium response time  
+    - Report generation: Slower response
+    - Error simulation: Variable response time
+    """
+    
+    def __init__(self):
+        self.order_database = self._initialize_order_database()
+        self.processing_stats = {
+            "queries_processed": 0,
+            "total_response_time": 0.0,
+            "errors_count": 0
+        }
+    
+    def _initialize_order_database(self) -> Dict[str, OrderInfo]:
+        """Initialize sample order database"""
+        orders = {}
+        for i in range(100):
+            order_id = f"ORDER{i:03d}"
+            orders[order_id] = OrderInfo(
+                order_id=order_id,
+                status=random.choice(["processing", "shipped", "delivered", "cancelled"]),
+                customer_id=f"CUST{random.randint(1000, 9999)}",
+                items=[f"item_{j}" for j in range(random.randint(1, 5))],
+                total_amount=round(random.uniform(10.0, 500.0), 2)
+            )
+        return orders
+    
+    def process_request(self, request: str) -> Dict[str, any]:
+        """
+        Process customer support request with performance tracking
+        
+        Args:
+            request: Customer request string
+            
+        Returns:
+            Dict containing response and performance metrics
+        """
+        start_time = time.time()
+        
+        # Determine request type and complexity
+        request_lower = request.lower()
+        
+        if any(word in request_lower for word in ["hello", "hi", "help"]):
+            response_data = self._handle_greeting(request)
+            processing_time = 0.1  # Fast response
+            
+        elif "status" in request_lower or "tracking" in request_lower:
+            response_data = self._handle_order_status(request)
+            processing_time = 0.3  # Medium response time
+            
+        elif "report" in request_lower or "summary" in request_lower:
+            response_data = self._handle_report_generation(request)
+            processing_time = 1.2  # Slower response time
+            
+        elif "error" in request_lower:
+            response_data = self._handle_error_simulation(request)
+            processing_time = random.uniform(0.5, 2.0)  # Variable response time
+            
+        elif "bulk" in request_lower:
+            response_data = self._handle_bulk_operation(request)
+            processing_time = 2.5  # Slowest response time
+            
+        else:
+            response_data = self._handle_default(request)
+            processing_time = 0.2  # Default response time
+        
+        # Simulate actual processing time
+        time.sleep(processing_time)
+        
+        # Update stats
+        end_time = time.time()
+        actual_response_time = end_time - start_time
+        self.processing_stats["queries_processed"] += 1
+        self.processing_stats["total_response_time"] += actual_response_time
+        
+        # Calculate metrics
+        response_data["performance_metrics"] = {
+            "response_time": actual_response_time,
+            "processing_time": processing_time,
+            "query_type": self._classify_request(request),
+            "tokens_estimated": len(request.split()) * 1.3,  # Rough token estimation
+            "memory_usage_mb": random.uniform(50, 150),  # Simulated memory usage
+            "cpu_utilization": random.uniform(10, 80)  # Simulated CPU usage
+        }
+        
+        return response_data
+    
+    def _handle_greeting(self, request: str) -> Dict[str, any]:
+        """Handle simple greeting requests (fast)"""
+        return {
+            "status": "success",
+            "response": "Hello! How can I help you today?",
+            "query_type": "greeting",
+            "data": None
+        }
+    
+    def _handle_order_status(self, request: str) -> Dict[str, any]:
+        """Handle order status queries (medium complexity)"""
+        # Simulate database lookup time
+        time.sleep(0.1)
+        
+        # Extract order ID from request
+        order_id = "ORDER001"  # Simplified for example
+        
+        order_info = self.order_database.get(order_id)
+        if order_info:
+            return {
+                "status": "success",
+                "response": f"Order {order_id} is currently {order_info.status}",
+                "query_type": "order_status",
+                "data": {
+                    "order_id": order_id,
+                    "status": order_info.status,
+                    "customer_id": order_info.customer_id,
+                    "items_count": len(order_info.items),
+                    "total_amount": order_info.total_amount
+                }
+            }
+        else:
+            return {
+                "status": "error",
+                "response": f"Order {order_id} not found",
+                "query_type": "order_status",
+                "error": "Order not found"
+            }
+    
+    def _handle_report_generation(self, request: str) -> Dict[str, any]:
+        """Handle report generation requests (complex, slower)"""
+        # Simulate complex analysis and report generation
+        time.sleep(0.8)
+        
+        # Generate comprehensive report
+        report_data = {
+            "summary": "Customer support report generated",
+            "total_orders": len(self.order_database),
+            "status_breakdown": {},
+            "top_customers": [],
+            "recommendations": []
+        }
+        
+        # Calculate status breakdown
+        status_counts = {}
+        for order in self.order_database.values():
+            status_counts[order.status] = status_counts.get(order.status, 0) + 1
+        
+        report_data["status_breakdown"] = status_counts
+        
+        return {
+            "status": "success",
+            "response": f"Report generated with {len(report_data)} data points",
+            "query_type": "report_generation",
+            "data": report_data
+        }
+    
+    def _handle_error_simulation(self, request: str) -> Dict[str, any]:
+        """Handle error simulation requests (variable performance)"""
+        error_type = random.choice(["timeout", "validation", "database", "external_api"])
+        
+        if error_type == "timeout":
+            return {
+                "status": "error",
+                "response": "Request timed out",
+                "query_type": "error_simulation",
+                "error": "TimeoutError: Request exceeded 5 second limit"
+            }
+        elif error_type == "validation":
+            return {
+                "status": "error", 
+                "response": "Invalid request format",
+                "query_type": "error_simulation",
+                "error": "ValidationError: Missing required fields"
+            }
+        elif error_type == "database":
+            return {
+                "status": "error",
+                "response": "Database connection error",
+                "query_type": "error_simulation", 
+                "error": "DatabaseError: Connection timeout"
+            }
+        else:  # external_api
+            return {
+                "status": "error",
+                "response": "External service unavailable",
+                "query_type": "error_simulation",
+                "error": "APIError: Service temporarily unavailable"
+            }
+    
+    def _handle_bulk_operation(self, request: str) -> Dict[str, any]:
+        """Handle bulk operations (slowest performance)"""
+        # Simulate bulk processing
+        time.sleep(1.5)
+        
+        results = []
+        for i in range(10):  # Process 10 items
+            order_id = f"ORDER{i:03d}"
+            order_info = self.order_database.get(order_id)
+            if order_info:
+                results.append({
+                    "order_id": order_id,
+                    "status": order_info.status,
+                    "processed": True
+                })
+        
+        return {
+            "status": "success",
+            "response": f"Bulk operation completed for {len(results)} orders",
+            "query_type": "bulk_operation",
+            "data": {
+                "processed_count": len(results),
+                "results": results,
+                "processing_time": 1.5
+            }
+        }
+    
+    def _handle_default(self, request: str) -> Dict[str, any]:
+        """Handle default requests"""
+        return {
+            "status": "success",
+            "response": f"I understand you're asking about: {request[:50]}...",
+            "query_type": "default",
+            "data": None
+        }
+    
+    def _classify_request(self, request: str) -> str:
+        """Classify request type"""
+        request_lower = request.lower()
+        if any(word in request_lower for word in ["hello", "hi", "help"]):
+            return "greeting"
+        elif "status" in request_lower or "tracking" in request_lower:
+            return "order_status"
+        elif "report" in request_lower or "summary" in request_lower:
+            return "report_generation"
+        elif "error" in request_lower:
+            return "error_simulation"
+        elif "bulk" in request_lower:
+            return "bulk_operation"
+        else:
+            return "default"
+    
+    def get_performance_stats(self) -> Dict[str, any]:
+        """Get agent performance statistics"""
+        avg_response_time = 0.0
+        if self.processing_stats["queries_processed"] > 0:
+            avg_response_time = (
+                self.processing_stats["total_response_time"] / 
+                self.processing_stats["queries_processed"]
+            )
+        
+        return {
+            **self.processing_stats,
+            "average_response_time": avg_response_time,
+            "orders_in_database": len(self.order_database)
+        }</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Performance Tests</h2>
+                    <p>Now let's create comprehensive performance tests for our agent:</p>
+                    
+                    <h3>2.1 Basic Performance Testing</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="code-title">tests/test_performance_examples.py</span>
+                        </div>
+                        <pre><code class="language-python">"""
+Performance testing examples for customer support agent
+"""
+import pytest
+import time
+from senytl import performance, expect_performance, expect
+from agents.customer_support_performance import CustomerSupportAgent
+
+
+@pytest.mark.senytl_agent
+class TestPerformanceExamples:
+    """Performance test examples for customer support agent"""
+    
+    @performance.benchmark
+    def test_basic_response_time(self, senytl_agent):
+        """Test basic response time for simple queries"""
+        
+        def simple_query_agent(message: str) -> str:
+            agent = CustomerSupportAgent()
+            result = agent.process_request(message)
+            return json.dumps(result)
+        
+        wrapped = senytl_agent(simple_query_agent)
+        
+        # Test simple greeting (should be fast)
+        response = wrapped.run("Hello, I need help")
+        
+        # Access performance metrics
+        print(f"Response time: {response.execution_time:.3f}s")
+        print(f"Query type: {response.performance_metrics.get('query_type', 'unknown')}")
+        
+        # Basic assertions
+        expect(response.success).to_be_true()
+        expect(response.execution_time).to_be_less_than(1.0)  # Should be under 1 second
+        
+        # Parse response data
+        import json
+        data = json.loads(response.output)
+        expect(data["status"]).to_equal("success")
+        expect(data["query_type"]).to_equal("greeting")
+    
+    @performance.benchmark
+    def test_order_status_performance(self, senytl_agent):
+        """Test performance of order status queries"""
+        
+        def order_status_agent(message: str) -> str:
+            agent = CustomerSupportAgent()
+            result = agent.process_request(message)
+            return json.dumps(result)
+        
+        wrapped = senytl_agent(order_status_agent)
+        
+        # Test order status query (medium complexity)
+        response = wrapped.run("What's the status of my order ORDER001?")
+        
+        # Performance assertions
+        expect(response.success).to_be_true()
+        expect(response.execution_time).to_be_less_than(2.0)  # Should be under 2 seconds
+        
+        # Parse and validate response
+        import json
+        data = json.loads(response.output)
+        expect(data["status"]).to_equal("success")
+        expect(data["query_type"]).to_equal("order_status")
+        expect(data["data"]).not_to_be_none()
+    
+    @performance.benchmark
+    def test_report_generation_performance(self, senytl_agent):
+        """Test performance of report generation (slower operation)"""
+        
+        def report_agent(message: str) -> str:
+            agent = CustomerSupportAgent()
+            result = agent.process_request(message)
+            return json.dumps(result)
+        
+        wrapped = senytl_agent(report_agent)
+        
+        # Test report generation (complex operation)
+        response = wrapped.run("Generate a customer support report")
+        
+        # Performance assertions for slower operation
+        expect(response.success).to_be_true()
+        expect(response.execution_time).to_be_less_than(5.0)  # Should be under 5 seconds
+        expect(response.execution_time).to_be_greater_than(1.0)  # Should take at least 1 second
+        
+        # Validate report data
+        import json
+        data = json.loads(response.output)
+        expect(data["query_type"]).to_equal("report_generation")
+        expect(data["data"]).not_to_be_none()
+        expect(data["data"]).to_have_key("summary")
+        expect(data["data"]).to_have_key("status_breakdown")
+    
+    def test_sla_compliance(self, senytl_agent):
+        """Test SLA compliance for different query types"""
+        
+        def sla_test_agent(message: str) -> str:
+            agent = CustomerSupportAgent()
+            result = agent.process_request(message)
+            return json.dumps(result)
+        
+        wrapped = senytl_agent(sla_test_agent)
+        
+        # Test different query types against SLA requirements
+        test_cases = [
+            {
+                "message": "Hello there",
+                "max_response_time": 0.5,  # Greeting SLA: 500ms
+                "expected_type": "greeting"
+            },
+            {
+                "message": "Check order ORDER001 status",
+                "max_response_time": 2.0,  # Order status SLA: 2 seconds
+                "expected_type": "order_status"
+            },
+            {
+                "message": "Generate summary report",
+                "max_response_time": 10.0,  # Report SLA: 10 seconds
+                "expected_type": "report_generation"
+            }
+        ]
+        
+        for test_case in test_cases:
+            response = wrapped.run(test_case["message"])
+            expect(response.success).to_be_true()
+            
+            # SLA assertion
+            response.assert_latency_under(test_case["max_response_time"])
+            
+            # Validate query type
+            import json
+            data = json.loads(response.output)
+            expect(data["query_type"]).to_equal(test_case["expected_type"])
+    
+    def test_performance_monitoring(self, senytl_agent):
+        """Test comprehensive performance monitoring"""
+        
+        def monitoring_agent(message: str) -> str:
+            agent = CustomerSupportAgent()
+            result = agent.process_request(message)
+            
+            # Get agent performance stats
+            stats = agent.get_performance_stats()
+            result["agent_stats"] = stats
+            
+            return json.dumps(result)
+        
+        wrapped = senytl_agent(monitoring_agent)
+        
+        # Test multiple requests to gather performance data
+        messages = [
+            "Hello",
+            "Check order status",
+            "Generate report",
+            "Help me please",
+            "What's my order status"
+        ]
+        
+        performance_data = []
+        
+        for message in messages:
+            response = wrapped.run(message)
+            expect(response.success).to_be_true()
+            
+            # Collect performance data
+            import json
+            data = json.loads(response.output)
+            performance_data.append({
+                "message": message,
+                "response_time": response.execution_time,
+                "query_type": data["query_type"],
+                "tokens_estimated": data["performance_metrics"]["tokens_estimated"],
+                "memory_usage": data["performance_metrics"]["memory_usage_mb"]
+            })
+        
+        # Analyze performance data
+        response_times = [d["response_time"] for d in performance_data]
+        avg_response_time = sum(response_times) / len(response_times)
+        
+        print(f"Average response time: {avg_response_time:.3f}s")
+        print(f"Min response time: {min(response_times):.3f}s")
+        print(f"Max response time: {max(response_times):.3f}s")
+        
+        # Performance assertions
+        expect(avg_response_time).to_be_less_than(3.0)  # Average should be reasonable
+        expect(max(response_times)).to_be_less_than(10.0)  # No request should take too long
+        
+        # Check query type distribution
+        query_types = [d["query_type"] for d in performance_data]
+        expect("greeting").to_be_in(query_types)
+        expect("order_status").to_be_in(query_types)
+        expect("report_generation").to_be_in(query_types)
+
+
+@pytest.mark.senytl_agent
+class TestLoadTesting:
+    """Load testing examples"""
+    
+    @performance.load_test(concurrent_users=5, duration=10)
+    def test_concurrent_customer_queries(self):
+        """Test agent performance under concurrent load"""
+        
+        def load_test_agent(message: str) -> str:
+            agent = CustomerSupportAgent()
+            result = agent.process_request(message)
+            return json.dumps(result)
+        
+        from senytl import Senytl
+        senytl = Senytl()
+        wrapped = senytl.wrap(load_test_agent)
+        
+        # Simulate different types of customer queries
+        test_queries = [
+            "Hello, I need help with my order",
+            "What's the status of ORDER001?",
+            "Generate a customer report",
+            "I have a question about returns",
+            "Can you help me track my shipment?"
+        ]
+        
+        results = []
+        start_time = time.time()
+        
+        # Run concurrent queries
+        for i in range(15):  # More queries than concurrent users
+            query = test_queries[i % len(test_queries)]
+            response = wrapped.run(query)
+            results.append(response)
+            expect(response.success).to_be_true()
+        
+        end_time = time.time()
+        total_duration = end_time - start_time
+        
+        # Analyze load test results
+        successful_responses = [r for r in results if r.success]
+        expect(len(successful_responses)).to_equal(len(results))
+        
+        # Calculate throughput
+        throughput = len(results) / total_duration
+        print(f"Load test results:")
+        print(f"  Total queries: {len(results)}")
+        print(f"  Duration: {total_duration:.2f}s")
+        print(f"  Throughput: {throughput:.2f} queries/second")
+        print(f"  Success rate: {len(successful_responses)/len(results)*100:.1f}%")
+        
+        # Performance assertions
+        expect(throughput).to_be_greater_than(1.0)  # At least 1 query per second
+        expect(len(successful_responses)).to_equal(len(results))  # 100% success rate
+        
+        return wrapped
+    
+    def test_memory_leak_detection(self, senytl_agent):
+        """Test for memory leaks during extended operation"""
+        
+        def memory_test_agent(message: str) -> str:
+            agent = CustomerSupportAgent()
+            result = agent.process_request(message)
+            return json.dumps(result)
+        
+        wrapped = senytl_agent(memory_test_agent)
+        
+        # Get initial memory usage
+        initial_memory = performance.get_memory_usage()
+        print(f"Initial memory usage: {initial_memory:.2f}MB")
+        
+        # Run many requests to detect memory leaks
+        memory_samples = []
+        
+        for i in range(50):
+            response = wrapped.run(f"Test request number {i}")
+            expect(response.success).to_be_true()
+            
+            # Sample memory usage every 10 requests
+            if i % 10 == 0:
+                current_memory = performance.get_memory_usage()
+                memory_samples.append(current_memory)
+                print(f"Memory at request {i}: {current_memory:.2f}MB")
+        
+        # Get final memory usage
+        final_memory = performance.get_memory_usage()
+        print(f"Final memory usage: {final_memory:.2f}MB")
+        
+        # Calculate memory growth
+        memory_growth = final_memory - initial_memory
+        memory_growth_percentage = (memory_growth / initial_memory) * 100
+        
+        print(f"Memory growth: {memory_growth:.2f}MB ({memory_growth_percentage:.1f}%)")
+        
+        # Assert no significant memory leaks
+        expect(memory_growth_percentage).to_be_less_than(20.0)  # Less than 20% growth
+        
+        # Use built-in memory leak assertion
+        response = wrapped.run("Final memory test")
+        response.assert_no_memory_leaks(threshold=0.20)
+
+
+@pytest.mark.senytl_agent
+class TestPerformanceRegression:
+    """Performance regression testing"""
+    
+    def test_performance_baseline(self, senytl_agent):
+        """Test against performance baselines"""
+        
+        def baseline_agent(message: str) -> str:
+            agent = CustomerSupportAgent()
+            result = agent.process_request(message)
+            return json.dumps(result)
+        
+        wrapped = senytl_agent(baseline_agent)
+        
+        # Define performance baselines (from previous testing)
+        baselines = {
+            "greeting": {"max_time": 0.5, "avg_time": 0.2},
+            "order_status": {"max_time": 2.0, "avg_time": 0.8},
+            "report_generation": {"max_time": 5.0, "avg_time": 2.5}
+        }
+        
+        # Test each baseline
+        for query_type, baseline in baselines.items():
+            test_message = {
+                "greeting": "Hello there",
+                "order_status": "Check my order status",
+                "report_generation": "Generate a report"
+            }[query_type]
+            
+            response = wrapped.run(test_message)
+            expect(response.success).to_be_true()
+            
+            # Check against baseline
+            response_time = response.execution_time
+            
+            print(f"{query_type} performance:")
+            print(f"  Current: {response_time:.3f}s")
+            print(f"  Baseline max: {baseline['max_time']:.3f}s")
+            print(f"  Baseline avg: {baseline['avg_time']:.3f}s")
+            
+            # Assert within baseline limits
+            expect(response_time).to_be_less_than(baseline["max_time"])
+            
+            # Check for significant regression (current > 150% of baseline average)
+            regression_threshold = baseline["avg_time"] * 1.5
+            expect(response_time).to_be_less_than(regression_threshold)
+
+
+@pytest.mark.senytl_agent
+class TestCostEstimation:
+    """Cost estimation and tracking tests"""
+    
+    def test_token_usage_tracking(self, senytl_agent):
+        """Test token usage tracking and cost estimation"""
+        
+        def cost_tracking_agent(message: str) -> str:
+            agent = CustomerSupportAgent()
+            result = agent.process_request(message)
+            return json.dumps(result)
+        
+        wrapped = senytl_agent(cost_tracking_agent)
+        
+        # Test with different message lengths
+        test_messages = [
+            "Hi",  # Short message
+            "Hello, I need help with my order ORDER123 that was placed last week",  # Medium message
+            "Hello, I need comprehensive assistance with my recent order ORDER123456789 that was placed last week, including tracking information, delivery status, return options, and any available discounts or promotions that might apply to my purchase"  # Long message
+        ]
+        
+        total_tokens = 0
+        total_cost = 0.0
+        
+        for message in test_messages:
+            response = wrapped.run(message)
+            expect(response.success).to_be_true()
+            
+            # Parse response to get token information
+            import json
+            data = json.loads(response.output)
+            tokens = data["performance_metrics"]["tokens_estimated"]
+            total_tokens += tokens
+            
+            # Estimate cost (example pricing: $0.002 per 1K tokens)
+            estimated_cost = (tokens / 1000) * 0.002
+            total_cost += estimated_cost
+            
+            print(f"Message: '{message[:50]}...'")
+            print(f"  Tokens: {tokens:.1f}")
+            print(f"  Estimated cost: ${estimated_cost:.4f}")
+        
+        print(f"Total tokens: {total_tokens:.1f}")
+        print(f"Total estimated cost: ${total_cost:.4f}")
+        
+        # Cost assertions
+        expect(total_cost).to_be_less_than(0.10)  # Total cost should be reasonable
+        
+        # Check cost per request
+        avg_cost_per_request = total_cost / len(test_messages)
+        expect(avg_cost_per_request).to_be_less_than(0.05)  # Average under 5 cents per request</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Running Performance Tests</h2>
+                    <p>Here's how to run and analyze the performance tests:</p>
+                    
+                    <h3>3.1 Basic Performance Test Run</h3>
+                    <div class="code-block">
+                        <pre><code class="language-bash"># Run basic performance tests
+pytest tests/test_performance_examples.py::TestPerformanceExamples::test_basic_response_time -v -s
+
+# Run all performance tests
+pytest tests/test_performance_examples.py -v
+
+# Run with performance tracking
+pytest tests/test_performance_examples.py --senytl-coverage --senytl-performance</code></pre>
+                    </div>
+
+                    <h3>3.2 Load Testing</h3>
+                    <div class="code-block">
+                        <pre><code class="language-bash"># Run load tests (this will take longer)
+pytest tests/test_performance_examples.py::TestLoadTesting::test_concurrent_customer_queries -v -s
+
+# Run memory leak detection
+pytest tests/test_performance_examples.py::TestLoadTesting::test_memory_leak_detection -v -s</code></pre>
+                    </div>
+
+                    <h3>3.3 Performance Report Generation</h3>
+                    <div class="code-block">
+                        <pre><code class="language-bash"># Generate performance report
+pytest tests/test_performance_examples.py --senytl-performance --performance-report=html --output=performance_report.html
+
+# Generate JSON report for CI/CD
+pytest tests/test_performance_examples.py --senytl-performance --performance-report=json --output=performance_data.json</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Expected Test Output</h2>
+                    <p>When you run the performance tests, you should see output like:</p>
+                    
+                    <div class="code-block">
+                        <pre><code class="language-bash">========================= test session starts =========================
+collected 8 items
+
+tests/test_performance_examples.py::TestPerformanceExamples::test_basic_response_time PASSED [ 12%]
+Response time: 0.145s
+Query type: greeting
+
+tests/test_performance_examples.py::TestPerformanceExamples::test_order_status_performance PASSED [ 25%]
+Response time: 0.456s
+Query type: order_status
+
+tests/test_performance_examples.py::TestPerformanceExamples::test_report_generation_performance PASSED [ 37%]
+Response time: 1.234s
+Query type: report_generation
+
+tests/test_performance_examples.py::TestPerformanceExamples::test_sla_compliance PASSED [ 50%]
+
+tests/test_performance_examples.py::TestPerformanceExamples::test_performance_monitoring PASSED [ 62%]
+Average response time: 0.567s
+Min response time: 0.123s
+Max response time: 1.234s
+
+tests/test_performance_examples.py::TestLoadTesting::test_concurrent_customer_queries PASSED [ 75%]
+Load test results:
+  Total queries: 15
+  Duration: 8.45s
+  Throughput: 1.78 queries/second
+  Success rate: 100.0%
+
+tests/test_performance_examples.py::TestLoadTesting::test_memory_leak_detection PASSED [ 87%]
+Initial memory usage: 45.23MB
+Memory at request 0: 45.23MB
+Memory at request 10: 46.12MB
+Memory at request 20: 46.45MB
+Memory at request 30: 46.78MB
+Memory at request 40: 46.91MB
+Final memory usage: 47.15MB
+Memory growth: 1.92MB (4.2%)
+
+tests/test_performance_examples.py::TestPerformanceRegression::test_performance_baseline PASSED [100%]
+greeting performance:
+  Current: 0.145s
+  Baseline max: 0.500s
+  Baseline avg: 0.200s
+
+========================= 8 passed in 45.67s =========================</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Performance Metrics Explained</h2>
+                    <p>Understanding the performance metrics Senytl provides:</p>
+                    
+                    <h3>4.1 Response Time Metrics</h3>
+                    <ul>
+                        <li><strong>Response Time:</strong> Total time from request to response</li>
+                        <li><strong>Processing Time:</strong> Actual processing time (excluding network overhead)</li>
+                        <li><strong>Latency:</strong> Time to first byte received</li>
+                    </ul>
+
+                    <h3>4.2 Resource Usage Metrics</h3>
+                    <ul>
+                        <li><strong>Memory Usage:</strong> Memory consumed during processing</li>
+                        <li><strong>CPU Utilization:</strong> Percentage of CPU used</li>
+                        <li><strong>Token Count:</strong> Estimated tokens used in LLM calls</li>
+                    </ul>
+
+                    <h3>4.3 Throughput Metrics</h3>
+                    <ul>
+                        <li><strong>Requests per Second:</strong> Number of requests processed per second</li>
+                        <li><strong>Concurrent Users:</strong> Number of simultaneous users supported</li>
+                        <li><strong>Success Rate:</strong> Percentage of successful requests</li>
+                    </ul>
+
+                    <h3>4.4 Cost Metrics</h3>
+                    <ul>
+                        <li><strong>Cost per Request:</strong> Estimated cost for each request</li>
+                        <li><strong>Cost per 1K Tokens:</strong> Token-based cost estimation</li>
+                        <li><strong>Total Session Cost:</strong> Cumulative cost for testing session</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Best Practices</h2>
+                    
+                    <h3>5.1 Performance Testing Strategy</h3>
+                    <ul>
+                        <li><strong>Define SLAs clearly:</strong> Establish performance requirements upfront</li>
+                        <li><strong>Test realistic scenarios:</strong> Use production-like data and workloads</li>
+                        <li><strong>Monitor trends over time:</strong> Track performance changes across releases</li>
+                        <li><strong>Test under realistic load:</strong> Use appropriate concurrency and duration</li>
+                        <li><strong>Include error scenarios:</strong> Test performance during failure conditions</li>
+                    </ul>
+
+                    <h3>5.2 Performance Assertions</h3>
+                    <ul>
+                        <li><strong>Set realistic thresholds:</strong> Avoid overly strict requirements</li>
+                        <li><strong>Use percentiles:</strong> P95 and P99 latencies give better insights</li>
+                        <li><strong>Consider variance:</strong> Don't just check averages</li>
+                        <li><strong>Test degradation:</strong> Ensure graceful performance under load</li>
+                    </ul>
+
+                    <h3>5.3 Monitoring and Alerting</h3>
+                    <ul>
+                        <li><strong>Continuous monitoring:</strong> Track performance in production</li>
+                        <li><strong>Alert on regressions:</strong> Set up alerts for performance degradation</li>
+                        <li><strong>Baseline comparisons:</strong> Compare against established baselines</li>
+                        <li><strong>Capacity planning:</strong> Use performance data for scaling decisions</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Next Steps</h2>
+                    <p>Continue exploring performance testing capabilities:</p>
+                    <ul>
+                        <li><a href="../docs/performance.html">Performance Testing Documentation</a> - Complete performance testing guide</li>
+                        <li><a href="state-testing.html">State Testing</a> - Test performance of stateful agents</li>
+                        <li><a href="basic-testing.html">Basic Testing</a> - Performance in basic test scenarios</li>
+                        <li><a href="../docs/tutorial.html">Complete Tutorial</a> - Performance testing in the full tutorial</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="logo-icon">🧪</span>
+                        <span class="logo-text">Senytl</span>
+                    </div>
+                    <p>Deterministic, fast testing utilities for LLM agents</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="../docs/installation.html">Installation</a></li>
+                        <li><a href="../docs/quickstart.html">Quick Start</a></li>
+                        <li><a href="../docs/testing.html">Documentation</a></li>
+                        <li><a href="../index.html#examples">Examples</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/senytl/senytl">GitHub</a></li>
+                        <li><a href="https://github.com/senytl/senytl/issues">Issues</a></li>
+                        <li><a href="https://pypi.org/project/senytl/">PyPI</a></li>
+                        <li><a href="https://github.com/senytl/senytl/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>License</h4>
+                    <p>MIT License</p>
+                    <p>© 2024 Senytl Contributors</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Built with ❤️ for the LLM testing community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+    <style>
+        .doc-header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .doc-breadcrumb {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .doc-breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .doc-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .doc-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+        
+        .doc-content {
+            max-width: 900px;
+        }
+        
+        .doc-section {
+            margin-bottom: 3rem;
+        }
+        
+        .doc-section h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .doc-section h3 {
+            margin: 2rem 0 1rem 0;
+            color: var(--text-primary);
+        }
+        
+        .doc-section h4 {
+            margin: 1.5rem 0 0.75rem 0;
+            color: var(--text-primary);
+        }
+        
+        .doc-section p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        .doc-section ul {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .doc-section li {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .doc-section code {
+            background: var(--bg-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--primary-color);
+        }
+    </style>
+</body>
+</html>

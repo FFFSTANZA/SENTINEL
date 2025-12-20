@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent Testing - Senytl</title>
+    <meta name="description" content="Learn how to test multi-agent systems with Senytl. Orchestrate and test complex agent interactions and workflows.">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-icon">🧪</span>
+                    <span class="logo-text">Senytl</span>
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html#getting-started" class="nav-link">Getting Started</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#features" class="nav-link">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#docs" class="nav-link">Documentation</a>
+                </li>
+                <li class="nav-item">
+                    <a href="../index.html#examples" class="nav-link">Examples</a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://github.com/senytl/senytl" class="nav-link">GitHub</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main style="margin-top: 4rem; padding: 2rem 0;">
+        <div class="container">
+            <div class="doc-header">
+                <nav class="doc-breadcrumb">
+                    <a href="../index.html">Home</a> / <a href="testing.html">Testing Basics</a> / <span>Multi-Agent Testing</span>
+                </nav>
+                <h1>Multi-Agent Testing</h1>
+                <p class="doc-description">Orchestrate and test complex multi-agent systems with comprehensive interaction testing and workflow validation.</p>
+            </div>
+
+            <div class="doc-content">
+                <section class="doc-section">
+                    <h2>Overview</h2>
+                    <p>Modern AI applications often involve multiple agents working together to solve complex problems. Senytl provides comprehensive support for testing multi-agent systems, including:</p>
+                    <ul>
+                        <li><strong>Agent Orchestration:</strong> Coordinate multiple agents in workflows</li>
+                        <li><strong>Interaction Testing:</strong> Validate agent-to-agent communication</li>
+                        <li><strong>Workflow Validation:</strong> Test complete multi-agent workflows</li>
+                        <li><strong>State Sharing:</strong> Manage shared state between agents</li>
+                        <li><strong>Performance Testing:</strong> Measure multi-agent system performance</li>
+                        <li><strong>Error Propagation:</strong> Test how errors cascade through the system</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Basic Multi-Agent System</h2>
+                    <p>Let's start by creating a simple multi-agent system and testing it.</p>
+                    
+                    <h3>2.1 Define Individual Agents</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="code-title">agents/research_team.py</span>
+                        </div>
+                        <pre><code class="language-python">"""
+Multi-agent system for research task completion
+A team of agents working together to research and report on topics.
+"""
+from abc import ABC, abstractmethod
+from typing import Dict, List, Any
+from dataclasses import dataclass
+
+
+@dataclass
+class AgentMessage:
+    """Represents a message between agents"""
+    sender: str
+    receiver: str
+    content: str
+    message_type: str = "request"  # request, response, error, info
+    metadata: Dict[str, Any] = None
+
+
+@dataclass 
+class ResearchTask:
+    """Represents a research task"""
+    topic: str
+    requirements: List[str]
+    priority: str = "normal"  # low, normal, high, urgent
+    deadline: str = None
+
+
+class BaseAgent(ABC):
+    """Base class for all agents in the system"""
+    
+    def __init__(self, name: str):
+        self.name = name
+        self.memory = []
+        self.capabilities = []
+    
+    @abstractmethod
+    def process_message(self, message: AgentMessage) -> AgentMessage:
+        """Process incoming message and return response"""
+        pass
+    
+    def remember(self, information: str):
+        """Store information in agent memory"""
+        self.memory.append(information)
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get agent status information"""
+        return {
+            "name": self.name,
+            "capabilities": self.capabilities,
+            "memory_size": len(self.memory),
+            "status": "active"
+        }
+
+
+class ResearcherAgent(BaseAgent):
+    """Agent responsible for conducting research"""
+    
+    def __init__(self, name: str = "Researcher"):
+        super().__init__(name)
+        self.capabilities = ["research", "data_collection", "analysis"]
+    
+    def process_message(self, message: AgentMessage) -> AgentMessage:
+        """Process research requests"""
+        if message.message_type == "request":
+            if "research" in message.content.lower():
+                topic = self._extract_topic(message.content)
+                research_data = self._conduct_research(topic)
+                
+                response_content = f"Research completed on '{topic}':\n"
+                response_content += f"- Key findings: {research_data['findings']}\n"
+                response_content += f"- Sources: {', '.join(research_data['sources'])}\n"
+                response_content += f"- Confidence: {research_data['confidence']}"
+                
+                return AgentMessage(
+                    sender=self.name,
+                    receiver=message.sender,
+                    content=response_content,
+                    message_type="response",
+                    metadata={"topic": topic, "research_quality": research_data["confidence"]}
+                )
+        
+        return AgentMessage(
+            sender=self.name,
+            receiver=message.sender,
+            content="I can help with research tasks. Please specify what you'd like me to research.",
+            message_type="response"
+        )
+    
+    def _extract_topic(self, content: str) -> str:
+        """Extract research topic from message content"""
+        # Simple topic extraction - in real implementation, use NLP
+        if "research" in content.lower():
+            # Extract text after "research"
+            parts = content.lower().split("research")
+            if len(parts) > 1:
+                return parts[1].strip()
+        return "general topic"
+    
+    def _conduct_research(self, topic: str) -> Dict[str, Any]:
+        """Conduct research on the given topic"""
+        # Simulate research process
+        return {
+            "findings": f"Comprehensive analysis of {topic} with key insights",
+            "sources": ["academic papers", "industry reports", "expert interviews"],
+            "confidence": 0.85,
+            "data_points": 15,
+            "last_updated": "2024-01-01"
+        }
+
+
+class WriterAgent(BaseAgent):
+    """Agent responsible for writing reports"""
+    
+    def __init__(self, name: str = "Writer"):
+        super().__init__(name)
+        self.capabilities = ["writing", "editing", "formatting", "summarization"]
+    
+    def process_message(self, message: AgentMessage) -> AgentMessage:
+        """Process writing requests"""
+        if message.message_type == "request":
+            if "write" in message.content.lower() or "report" in message.content.lower():
+                # Extract research content to write about
+                research_content = self._extract_research_content(message.content)
+                report = self._write_report(research_content)
+                
+                return AgentMessage(
+                    sender=self.name,
+                    receiver=message.sender,
+                    content=report,
+                    message_type="response",
+                    metadata={"word_count": len(report.split()), "format": "markdown"}
+                )
+        
+        return AgentMessage(
+            sender=self.name,
+            receiver=message.sender,
+            content="I can help write reports and documents. Please provide the content you'd like me to write about.",
+            message_type="response"
+        )
+    
+    def _extract_research_content(self, content: str) -> str:
+        """Extract research content from message"""
+        # Simple extraction - in real implementation, parse structured data
+        return content
+    
+    def _write_report(self, research_content: str) -> str:
+        """Write a report based on research content"""
+        return f"""# Research Report
+        
+## Executive Summary
+Based on the research conducted, here are the key findings:
+
+{research_content}
+
+## Methodology
+This report was compiled using systematic research methods including:
+- Data collection from multiple sources
+- Analysis of findings
+- Expert review and validation
+
+## Conclusion
+The research provides valuable insights into the topic area with high confidence in the findings.
+
+---
+*Report generated by {self.name} agent*
+*Date: 2024-01-01*
+"""
+
+
+class CoordinatorAgent(BaseAgent):
+    """Agent responsible for coordinating other agents"""
+    
+    def __init__(self, name: str = "Coordinator"):
+        super().__init__(name)
+        self.capabilities = ["coordination", "planning", "delegation", "monitoring"]
+        self.researcher = ResearcherAgent("Researcher")
+        self.writer = WriterAgent("Writer")
+        self.tasks = []
+    
+    def process_message(self, message: AgentMessage) -> AgentMessage:
+        """Process coordination requests"""
+        if message.message_type == "request":
+            if "research task" in message.content.lower():
+                task = self._parse_research_task(message.content)
+                result = self._execute_research_workflow(task)
+                
+                return AgentMessage(
+                    sender=self.name,
+                    receiver=message.sender,
+                    content=result,
+                    message_type="response",
+                    metadata={"task_id": task.topic, "workflow_completed": True}
+                )
+        
+        return AgentMessage(
+            sender=self.name,
+            receiver=message.sender,
+            content="I coordinate research workflows. Please specify what research task you'd like me to execute.",
+            message_type="response"
+        )
+    
+    def _parse_research_task(self, content: str) -> ResearchTask:
+        """Parse research task from message content"""
+        # Simple parsing - in real implementation, use NLP
+        return ResearchTask(
+            topic="artificial intelligence trends",
+            requirements=["current trends", "future predictions", "market analysis"],
+            priority="normal"
+        )
+    
+    def _execute_research_workflow(self, task: ResearchTask) -> str:
+        """Execute complete research workflow"""
+        # Step 1: Research
+        research_request = AgentMessage(
+            sender=self.name,
+            receiver="Researcher",
+            content=f"research {task.topic}",
+            message_type="request"
+        )
+        research_response = self.researcher.process_message(research_request)
+        
+        # Step 2: Write report
+        write_request = AgentMessage(
+            sender=self.name,
+            receiver="Writer", 
+            content=f"write report based on: {research_response.content}",
+            message_type="request"
+        )
+        write_response = self.writer.process_message(write_request)
+        
+        # Return final report
+        return f"""Research Workflow Completed for: {task.topic}
+
+{write_response.content}
+
+Workflow Metadata:
+- Research Quality: {research_response.metadata.get('research_quality', 'N/A')}
+- Report Length: {write_response.metadata.get('word_count', 'N/A')} words
+- Coordination completed successfully
+"""</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Testing Multi-Agent Systems</h2>
+                    <p>Now let's create comprehensive tests for our multi-agent system.</p>
+                    
+                    <h3>3.1 Basic Multi-Agent Testing</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="code-title">tests/test_multi_agent_system.py</span>
+                        </div>
+                        <pre><code class="language-python">"""
+Tests for multi-agent system
+"""
+import pytest
+import time
+from senytl import expect, multi_agent, performance
+from agents.research_team import (
+    ResearcherAgent, WriterAgent, CoordinatorAgent, 
+    AgentMessage, ResearchTask
+)
+
+
+@pytest.mark.senytl_agent
+class TestMultiAgentSystem:
+    """Test suite for multi-agent system functionality"""
+    
+    def test_individual_agent_functionality(self, senytl_agent):
+        """Test that individual agents work correctly"""
+        
+        def researcher_test_agent(message: str) -> str:
+            agent = ResearcherAgent()
+            msg = AgentMessage(sender="test", receiver=agent.name, content=message)
+            response = agent.process_message(msg)
+            return response.content
+        
+        wrapped = senytl_agent(researcher_test_agent)
+        response = wrapped.run("research artificial intelligence")
+        
+        expect(response).to_contain("Research completed")
+        expect(response).to_contain("artificial intelligence")
+        expect(response.success).to_be_true()
+    
+    def test_agent_to_agent_communication(self, senytl_agent):
+        """Test communication between agents"""
+        
+        def communication_agent(message: str) -> str:
+            researcher = ResearcherAgent()
+            writer = WriterAgent()
+            
+            # Send research request
+            research_msg = AgentMessage(
+                sender="coordinator",
+                receiver=researcher.name,
+                content=message
+            )
+            research_response = researcher.process_message(research_msg)
+            
+            # Send writing request with research results
+            write_msg = AgentMessage(
+                sender="coordinator", 
+                receiver=writer.name,
+                content=f"write report based on: {research_response.content}"
+            )
+            write_response = writer.process_message(write_msg)
+            
+            return f"Research: {research_response.content}\n\nReport: {write_response.content}"
+        
+        wrapped = senytl_agent(communication_agent)
+        response = wrapped.run("research machine learning")
+        
+        expect(response).to_contain("Research completed")
+        expect(response).to_contain("machine learning")
+        expect(response).to_contain("Report generated")
+        expect(response.success).to_be_true()
+    
+    def test_coordinator_workflow(self, senytl_agent):
+        """Test the coordinator agent's workflow management"""
+        
+        def coordinator_agent(message: str) -> str:
+            coordinator = CoordinatorAgent()
+            msg = AgentMessage(sender="test", receiver=coordinator.name, content=message)
+            response = coordinator.process_message(msg)
+            return response.content
+        
+        wrapped = senytl_agent(coordinator_agent)
+        response = wrapped.run("research task: analyze quantum computing trends")
+        
+        expect(response).to_contain("Research Workflow Completed")
+        expect(response).to_contain("quantum computing")
+        expect(response).to_contain("Executive Summary")
+        expect(response.success).to_be_true()
+    
+    def test_agent_memory_and_state(self, senytl_agent):
+        """Test that agents maintain memory and state correctly"""
+        
+        def state_agent(message: str) -> str:
+            agent = ResearcherAgent()
+            
+            # Store information
+            agent.remember(f"Previous interaction: {message}")
+            
+            # Process message
+            msg = AgentMessage(sender="test", receiver=agent.name, content=message)
+            response = agent.process_message(msg)
+            
+            # Return status information
+            status = agent.get_status()
+            return f"Response: {response.content}\nMemory size: {status['memory_size']}"
+        
+        wrapped = senytl_agent(state_agent)
+        
+        # First interaction
+        response1 = wrapped.run("research AI trends")
+        expect(response1).to_contain("Memory size: 1")
+        expect(response1.success).to_be_true()
+        
+        # Second interaction (should have memory from first)
+        response2 = wrapped.run("research ML applications")
+        expect(response2).to_contain("Memory size: 2")
+        expect(response2.success).to_be_true()
+    
+    def test_workflow_error_handling(self, senytl_agent):
+        """Test error handling in multi-agent workflows"""
+        
+        def error_agent(message: str) -> str:
+            coordinator = CoordinatorAgent()
+            
+            # Test with malformed message
+            if message == "error":
+                msg = AgentMessage(sender="test", receiver="nonexistent", content=message)
+            else:
+                msg = AgentMessage(sender="test", receiver=coordinator.name, content=message)
+            
+            try:
+                response = coordinator.process_message(msg)
+                return f"Success: {response.content}"
+            except Exception as e:
+                return f"Error handled: {str(e)}"
+        
+        wrapped = senytl_agent(error_agent)
+        
+        # Test normal workflow
+        response1 = wrapped.run("research task: test topic")
+        expect(response1).to_contain("Success:")
+        expect(response1.success).to_be_true()
+        
+        # Test error handling
+        response2 = wrapped.run("error")
+        expect(response2).to_contain("Error handled:")
+        expect(response2.success).to_be_true()  # Error was handled gracefully
+    
+    def test_parallel_agent_operations(self, senytl_agent):
+        """Test that agents can operate in parallel scenarios"""
+        
+        def parallel_agent(message: str) -> str:
+            researcher = ResearcherAgent("Researcher1")
+            writer = WriterAgent("Writer1")
+            
+            # Simulate parallel processing
+            research_msg = AgentMessage(sender="system", receiver=researcher.name, content=message)
+            write_msg = AgentMessage(sender="system", receiver=writer.name, content=f"document: {message}")
+            
+            # Process both messages
+            research_response = researcher.process_message(research_msg)
+            write_response = writer.process_message(write_msg)
+            
+            return f"Parallel results:\nResearch: {research_response.content}\nWriting: {write_response.content}"
+        
+        wrapped = senytl_agent(parallel_agent)
+        response = wrapped.run("parallel processing test")
+        
+        expect(response).to_contain("Parallel results:")
+        expect(response).to_contain("Research:")
+        expect(response).to_contain("Writing:")
+        expect(response.success).to_be_true()
+
+
+@pytest.mark.senytl_agent  
+class TestMultiAgentPerformance:
+    """Performance tests for multi-agent systems"""
+    
+    @multi_agent.test
+    def test_workflow_performance(self, senytl_agent):
+        """Test performance of complete workflows"""
+        
+        @performance.benchmark
+        def workflow_performance_agent(message: str) -> str:
+            coordinator = CoordinatorAgent()
+            msg = AgentMessage(sender="test", receiver=coordinator.name, content=message)
+            response = coordinator.process_message(msg)
+            return response.content
+        
+        wrapped = senytl_agent(workflow_performance_agent)
+        response = wrapped.run("research task: performance test topic")
+        
+        expect(response.success).to_be_true()
+        
+        # Assert performance requirements
+        response.assert_latency_under(5.0)  # Workflow should complete within 5 seconds
+        expect(response.execution_time).to_be_less_than(5.0)
+    
+    @multi_agent.load_test(concurrent_users=3, duration=10)
+    def test_concurrent_workflows(self):
+        """Test multiple concurrent workflows"""
+        
+        def concurrent_workflow_agent(message: str) -> str:
+            coordinator = CoordinatorAgent()
+            msg = AgentMessage(sender="concurrent", receiver=coordinator.name, content=message)
+            response = coordinator.process_message(msg)
+            return response.content
+        
+        from senytl import Senytl
+        senytl = Senytl()
+        wrapped = senytl.wrap(concurrent_workflow_agent)
+        
+        # Test multiple concurrent research tasks
+        tasks = [
+            "research task: AI trends",
+            "research task: ML applications", 
+            "research task: data science"
+        ]
+        
+        results = []
+        for task in tasks:
+            response = wrapped.run(task)
+            results.append(response)
+            expect(response.success).to_be_true()
+        
+        # Verify all workflows completed
+        successful_workflows = [r for r in results if r.success]
+        expect(len(successful_workflows)).to_equal(len(tasks))
+        
+        return wrapped
+
+
+@pytest.mark.senytl_agent
+class TestMultiAgentState:
+    """State management tests for multi-agent systems"""
+    
+    def test_shared_state_between_agents(self, senytl_agent):
+        """Test that agents can share state information"""
+        
+        def shared_state_agent(message: str) -> str:
+            # Create a shared context
+            shared_context = {
+                "project": "test_project",
+                "deadline": "2024-01-01",
+                "priority": "high"
+            }
+            
+            researcher = ResearcherAgent()
+            writer = WriterAgent()
+            
+            # Researcher processes with shared context
+            research_msg = AgentMessage(
+                sender="coordinator",
+                receiver=researcher.name,
+                content=f"{message} (Project: {shared_context['project']})"
+            )
+            research_response = researcher.process_message(research_msg)
+            
+            # Writer uses same shared context
+            write_msg = AgentMessage(
+                sender="coordinator",
+                receiver=writer.name, 
+                content=f"write report for {shared_context['project']} project"
+            )
+            write_response = writer.process_message(write_msg)
+            
+            return f"Research: {research_response.content}\nReport: {write_response.content}"
+        
+        wrapped = senytl_agent(shared_state_agent)
+        response = wrapped.run("research urgent topic")
+        
+        expect(response).to_contain("test_project")
+        expect(response).to_contain("urgent topic")
+        expect(response).to_contain("Report generated")
+        expect(response.success).to_be_true()
+    
+    def test_state_persistence_across_interactions(self, senytl_agent):
+        """Test state persistence across multiple interactions"""
+        
+        def persistence_agent(message: str) -> str:
+            coordinator = CoordinatorAgent()
+            
+            # Store state information
+            coordinator.remember(f"Task initiated: {message}")
+            
+            msg = AgentMessage(sender="test", receiver=coordinator.name, content=message)
+            response = coordinator.process_message(msg)
+            
+            # Get final state
+            status = coordinator.get_status()
+            return f"Response: {response.content}\nMemory: {len(coordinator.memory)} items"
+        
+        wrapped = senytl_agent(persistence_agent)
+        
+        # First interaction
+        response1 = wrapped.run("initial research task")
+        expect(response1).to_contain("Memory: 1 items")
+        
+        # Second interaction (should accumulate state)
+        response2 = wrapped.run("follow-up task")
+        expect(response2).to_contain("Memory: 2 items")
+        
+        # Third interaction
+        response3 = wrapped.run("final task")
+        expect(response3).to_contain("Memory: 3 items")
+        
+        expect(response1.success).to_be_true()
+        expect(response2.success).to_be_true() 
+        expect(response3.success).to_be_true()</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Advanced Multi-Agent Patterns</h2>
+                    
+                    <h3>3.1 Agent Orchestration with Senytl System</h3>
+                    <p>Use Senytl's built-in multi-agent system for easier orchestration:</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">from senytl import multi_agent
+
+# Create a multi-agent system
+system = multi_agent.System()
+
+# Add agents to the system
+system.add_agent("researcher", ResearcherAgent("Researcher"))
+system.add_agent("writer", WriterAgent("Writer"))
+system.add_agent("coordinator", CoordinatorAgent("Coordinator"))
+
+# Define the workflow
+@multi_agent.test
+def test_orchestrated_workflow():
+    """Test a complete orchestrated workflow"""
+    
+    # Step 1: Coordinator delegates research task
+    research_task = system.delegate("coordinator", "researcher", "research AI trends")
+    expect(research_task.success).to_be_true()
+    expect(research_task.response).to_contain("Research completed")
+    
+    # Step 2: Coordinator gets research results and delegates writing
+    write_task = system.delegate(
+        "coordinator", 
+        "writer", 
+        f"write report based on: {research_task.response}"
+    )
+    expect(write_task.success).to_be_true()
+    expect(write_task.response).to_contain("Report generated")
+    
+    # Step 3: Verify final workflow result
+    final_result = system.get_workflow_result()
+    expect(final_result).to_contain("AI trends")
+    expect(final_result).to_contain("Executive Summary")
+    
+    return system</code></pre>
+                    </div>
+
+                    <h3>3.2 Complex Workflow Testing</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">@multi_agent.test
+def test_complex_research_workflow():
+    """Test a complex multi-step research workflow"""
+    
+    # Define workflow steps
+    workflow_steps = [
+        {
+            "agent": "researcher",
+            "action": "initial_research",
+            "input": "machine learning applications",
+            "expected_contains": ["Research completed", "machine learning"]
+        },
+        {
+            "agent": "researcher", 
+            "action": "deep_analysis",
+            "input": "deep learning techniques",
+            "expected_contains": ["Research completed", "deep learning"]
+        },
+        {
+            "agent": "writer",
+            "action": "synthesis",
+            "input": "combine research on ML and deep learning",
+            "expected_contains": ["Report generated", "Executive Summary"]
+        }
+    ]
+    
+    results = []
+    
+    for step in workflow_steps:
+        # Execute each step
+        agent = system.get_agent(step["agent"])
+        msg = AgentMessage(
+            sender="workflow",
+            receiver=agent.name,
+            content=step["input"]
+        )
+        response = agent.process_message(msg)
+        
+        # Validate step result
+        expect(response.success).to_be_true()
+        for expected in step["expected_contains"]:
+            expect(response.content).to_contain(expected)
+        
+        results.append(response.content)
+    
+    # Verify complete workflow
+    final_synthesis = results[-1]  # Last step result
+    expect(final_synthesis).to_contain("machine learning")
+    expect(final_synthesis).to_contain("deep learning")
+    expect(final_synthesis).to_contain("Methodology")
+    
+    return results</code></pre>
+                    </div>
+
+                    <h3>3.3 Agent Communication Testing</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">@multi_agent.test
+def test_agent_communication_patterns():
+    """Test various agent communication patterns"""
+    
+    # Test direct communication
+    direct_comm = system.communicate(
+        from_agent="researcher",
+        to_agent="writer",
+        message="Here's my research data for the report",
+        message_type="data_transfer"
+    )
+    expect(direct_comm.success).to_be_true()
+    
+    # Test broadcast communication
+    broadcast = system.broadcast(
+        from_agent="coordinator",
+        message="All agents report status",
+        exclude_sender=True
+    )
+    expect(broadcast.success).to_be_true()
+    expect(broadcast.responses).to_have_length_greater_than(1)
+    
+    # Test request-response patterns
+    request_response = system.request_response(
+        requester="coordinator",
+        responder="researcher", 
+        request="Provide status update",
+        timeout=5.0
+    )
+    expect(request_response.success).to_be_true()
+    expect(request_response.response).to_contain("active")
+    
+    return system</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Performance Considerations</h2>
+                    <p>Multi-agent systems have unique performance characteristics to consider:</p>
+                    
+                    <h3>4.1 Workflow Performance</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">@performance.benchmark
+def benchmark_multi_agent_workflow():
+    """Benchmark complete multi-agent workflow"""
+    
+    coordinator = CoordinatorAgent()
+    
+    # Measure individual agent performance
+    researcher_times = []
+    writer_times = []
+    
+    for i in range(10):
+        # Research phase
+        start_time = time.time()
+        research_msg = AgentMessage(sender="benchmark", receiver="Researcher", content=f"research topic {i}")
+        research_response = coordinator.researcher.process_message(research_msg)
+        research_time = time.time() - start_time
+        researcher_times.append(research_time)
+        
+        # Writing phase
+        start_time = time.time()
+        write_msg = AgentMessage(sender="benchmark", receiver="Writer", content=f"write about topic {i}")
+        write_response = coordinator.writer.process_message(write_msg)
+        write_time = time.time() - start_time
+        writer_times.append(write_time)
+    
+    # Analyze performance
+    avg_research_time = sum(research_times) / len(research_times)
+    avg_write_time = sum(writer_times) / len(writer_times)
+    total_workflow_time = avg_research_time + avg_write_time
+    
+    print(f"Average research time: {avg_research_time:.3f}s")
+    print(f"Average write time: {avg_write_time:.3f}s")
+    print(f"Total workflow time: {total_workflow_time:.3f}s")
+    
+    # Assert performance requirements
+    expect(avg_research_time).to_be_less_than(1.0)
+    expect(avg_write_time).to_be_less_than(2.0)
+    expect(total_workflow_time).to_be_less_than(3.0)</code></pre>
+                    </div>
+
+                    <h3>4.2 Concurrency Testing</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python">@multi_agent.load_test(concurrent_users=10, duration=30)
+def test_concurrent_multi_agent_operations():
+    """Test system under concurrent multi-agent load"""
+    
+    def concurrent_workflow(message: str) -> str:
+        coordinator = CoordinatorAgent()
+        msg = AgentMessage(sender="load_test", receiver=coordinator.name, content=message)
+        response = coordinator.process_message(msg)
+        return response.content
+    
+    # Test concurrent workflows
+    test_messages = [
+        "research task: concurrent test 1",
+        "research task: concurrent test 2", 
+        "research task: concurrent test 3"
+    ]
+    
+    results = []
+    for message in test_messages:
+        response = concurrent_workflow(message)
+        results.append(response)
+        expect(response).to_contain("Research Workflow Completed")
+    
+    return len(results)  # Return count for further analysis</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Best Practices</h2>
+                    
+                    <h3>Agent Design</h3>
+                    <ul>
+                        <li><strong>Clear responsibilities:</strong> Each agent should have well-defined capabilities</li>
+                        <li><strong>Minimal coupling:</strong> Agents should be as independent as possible</li>
+                        <li><strong>Robust error handling:</strong> Handle failures gracefully at agent level</li>
+                        <li><strong>State management:</strong> Use appropriate state management for agent memory</li>
+                        <li><strong>Communication protocols:</strong> Standardize message formats and protocols</li>
+                    </ul>
+
+                    <h3>Testing Strategy</h3>
+                    <ul>
+                        <li><strong>Test individual agents:</strong> Verify each agent works in isolation</li>
+                        <li><strong>Test interactions:</strong> Validate agent-to-agent communication</li>
+                        <li><strong>Test workflows:</strong> Test complete end-to-end workflows</li>
+                        <li><strong>Test failure scenarios:</strong> Ensure graceful degradation when agents fail</li>
+                        <li><strong>Performance testing:</strong> Measure workflow performance under load</li>
+                    </ul>
+
+                    <h3>System Architecture</h3>
+                    <ul>
+                        <li><strong>Scalable design:</strong> Design for horizontal scaling of agent instances</li>
+                        <li><strong>Load balancing:</strong> Implement appropriate load balancing strategies</li>
+                        <li><strong>Monitoring:</strong> Add comprehensive monitoring and logging</li>
+                        <li><strong>Resource management:</strong> Monitor and limit resource usage per agent</li>
+                        <li><strong>Fault tolerance:</strong> Implement retry mechanisms and fallback strategies</li>
+                    </ul>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Common Patterns</h2>
+                    
+                    <h3>5.1 Pipeline Pattern</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Agents connected in a pipeline
+pipeline_agents = ["preprocessor", "processor", "postprocessor", "formatter"]
+
+@multi_agent.test
+def test_pipeline_workflow():
+    """Test agents connected in a pipeline"""
+    
+    input_data = "raw input data"
+    current_data = input_data
+    
+    for agent_name in pipeline_agents:
+        agent = system.get_agent(agent_name)
+        msg = AgentMessage(sender="pipeline", receiver=agent.name, content=current_data)
+        response = agent.process_message(msg)
+        current_data = response.content
+    
+    # Verify pipeline processing
+    expect(current_data).not_to_equal(input_data)  # Data should be transformed
+    expect(current_data).to_contain("formatted")  # Final format applied
+    
+    return current_data</code></pre>
+                    </div>
+
+                    <h3>5.2 Supervisor Pattern</h3>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Supervisor agent manages worker agents
+@multi_agent.test
+def test_supervisor_pattern():
+    """Test supervisor pattern where one agent manages others"""
+    
+    supervisor = system.get_agent("supervisor")
+    workers = ["worker1", "worker2", "worker3"]
+    
+    # Supervisor delegates tasks to workers
+    for worker_name in workers:
+        task = f"task for {worker_name}"
+        response = supervisor.delegate_task(worker_name, task)
+        expect(response.success).to_be_true()
+    
+    # Supervisor collects results
+    results = supervisor.collect_results(workers)
+    expect(len(results)).to_equal(len(workers))
+    
+    # Supervisor synthesizes final result
+    final_result = supervisor.synthesize_results(results)
+    expect(final_result).to_contain("synthesis complete")
+    
+    return final_result</code></pre>
+                    </div>
+                </section>
+
+                <section class="doc-section">
+                    <h2>Next Steps</h2>
+                    <p>Continue exploring advanced multi-agent testing capabilities:</p>
+                    <ul>
+                        <li><a href="state.html">State Persistence</a> - Test stateful multi-agent interactions</li>
+                        <li><a href="performance.html">Performance Testing</a> - Multi-agent system performance</li>
+                        <li><a href="assertions.html">Advanced Assertions</a> - Assertions for complex agent behaviors</li>
+                        <li><a href="tutorial.html">Complete Tutorial</a> - Hands-on multi-agent examples</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="logo-icon">🧪</span>
+                        <span class="logo-text">Senytl</span>
+                    </div>
+                    <p>Deterministic, fast testing utilities for LLM agents</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="installation.html">Installation</a></li>
+                        <li><a href="quickstart.html">Quick Start</a></li>
+                        <li><a href="testing.html">Documentation</a></li>
+                        <li><a href="../index.html#examples">Examples</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/senytl/senytl">GitHub</a></li>
+                        <li><a href="https://github.com/senytl/senytl/issues">Issues</a></li>
+                        <li><a href="https://pypi.org/project/senytl/">PyPI</a></li>
+                        <li><a href="https://github.com/senytl/senytl/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>License</h4>
+                    <p>MIT License</p>
+                    <p>© 2024 Senytl Contributors</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Built with ❤️ for the LLM testing community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+    <style>
+        .doc-header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .doc-breadcrumb {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .doc-breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .doc-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .doc-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+        
+        .doc-content {
+            max-width: 900px;
+        }
+        
+        .doc-section {
+            margin-bottom: 3rem;
+        }
+        
+        .doc-section h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .doc-section h3 {
+            margin: 2rem 0 1rem 0;
+            color: var(--text-primary);
+        }
+        
+        .doc-section h4 {
+            margin: 1.5rem 0 0.75rem 0;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 1rem;
+        }
+        
+        .doc-section p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        .doc-section ul {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .doc-section li {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .doc-section code {
+            background: var(--bg-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--primary-color);
+        }
+    </style>
+</body>
+</html>
