@@ -24,3 +24,11 @@ htmlcov/
 # Editors
 .vscode/
 .idea/
+
+# Tooling
+.mypy_cache/
+.ruff_cache/
+.tox/
+.python-version
+.env
+.DS_Store
