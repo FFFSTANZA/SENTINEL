@@ -2,13 +2,13 @@
 
 > **Deterministic, fast testing utilities for LLM agents**
 
-Senytl provides deterministic, fast testing primitives for LLM agents, designed to run reliably in local development and CI environments. Built with Python 3.10+, it offers comprehensive testing capabilities specifically designed for agent-based systems.
+Senytl is a comprehensive testing framework designed specifically for Large Language Model (LLM) agents. It provides deterministic, fast testing primitives that help developers build, test, and deploy reliable AI agents with confidence. Built with Python 3.10+, Senytl offers comprehensive testing capabilities including coverage tracking, performance benchmarking, state persistence, adversarial testing, and CI/CD integration - everything needed to ensure your LLM agents work correctly in both development and production environments.
 
 [![PyPI version](https://badge.fury.io/py/senytl.svg)](https://badge.fury.io/py/senytl)
 [![Python Support](https://img.shields.io/pypi/pyversions/senytl.svg)](https://pypi.org/project/senytl/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 📦 Installation
+## Installation
 
 ```bash
 pip install senytl
@@ -27,7 +27,7 @@ pip install "senytl[semantic]"
 pip install "senytl[pytest,semantic]"
 ```
 
-## ✨ Features
+## Features
 
 - **pytest Integration** - Seamless integration with pytest fixtures and markers
 - **Coverage & Quality Metrics** - Track tool coverage, conversation paths, and quality scores
@@ -40,7 +40,7 @@ pip install "senytl[pytest,semantic]"
 - **Semantic Validation** - Validate agent outputs using embeddings and similarity
 - **Test Generation** - Automatically generate test cases from agent code
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Basic Usage
 
@@ -79,7 +79,7 @@ def test_my_agent(senytl_agent):
     expect(response).to_contain("Test")
 ```
 
-## 📊 Coverage & Quality
+## Coverage & Quality
 
 Track your agent testing coverage and quality metrics:
 
@@ -103,7 +103,7 @@ Coverage tracks:
 - Decision Branches: Logic paths exercised
 - Input Diversity: Variety of test inputs
 
-## 🔄 State Persistence & Replay
+## State Persistence & Replay
 
 Test stateful agents by persisting and restoring state:
 
@@ -120,7 +120,7 @@ def test_with_state():
     expect(response).to_contain("expected output")
 ```
 
-## ⚡ Performance & SLA Testing
+## Performance & SLA Testing
 
 Benchmark your agent's performance and test SLA compliance:
 
@@ -145,7 +145,7 @@ def test_sla_compliance():
     response.assert_cost_under(0.01)  # $ per request
 ```
 
-## 🏢 CI/CD Integration
+## CI/CD Integration
 
 Automated testing in your CI pipeline:
 
@@ -161,7 +161,7 @@ from senytl import ci
 ci.generate_report()
 ```
 
-## 🤖 Multi-Agent Testing
+## Multi-Agent Testing
 
 Test systems with multiple interacting agents:
 
@@ -178,7 +178,7 @@ def test_collaboration():
     expect(result.success).to_be_true()
 ```
 
-## 📸 Snapshot Testing
+## Snapshot Testing
 
 Capture and assert on agent outputs across test runs:
 
@@ -191,7 +191,7 @@ def test_consistent_output():
     snapshot.assert_match(response.output)
 ```
 
-## 🎯 Adversarial Testing
+## Adversarial Testing
 
 Test your agent's robustness:
 
@@ -205,7 +205,7 @@ def test_robustness():
     expect(results.success_rate).to_be_greater_than(0.95)
 ```
 
-## 🧠 Semantic Validation
+## Semantic Validation
 
 Validate agent outputs using embeddings and similarity:
 
@@ -217,7 +217,7 @@ def test_semantic_similarity():
     expect(response).to_be_semantically_similar_to("python programming response")
 ```
 
-## 📝 Test Generation
+## Test Generation
 
 Automatically generate test cases:
 
@@ -232,7 +232,7 @@ senytl generate --interactive
 senytl suggest-tests
 ```
 
-## 🛠️ CLI Commands
+## CLI Commands
 
 ```bash
 # Display version
@@ -251,14 +251,14 @@ senytl init-ci --github
 senytl --help
 ```
 
-## 📈 pytest Plugin Features
+## pytest Plugin Features
 
 - Custom markers: `@pytest.mark.senytl_agent`, `@pytest.mark.senytl_mock`, `@pytest.mark.senytl_adversarial`
 - Fixtures: `senytl`, `senytl_agent`, `senytl_mock`, `senytl_config`
 - Coverage tracking automatically enabled with CLI flags
 - Integration with pytest-xdist for parallel testing
 
-## 🗂️ Directory Structure
+## Directory Structure
 
 ```
 .senytl/
@@ -271,7 +271,7 @@ senytl --help
 .snapshots/             # Snapshot files for testing
 ```
 
-## 🎓 Advanced Examples
+## Advanced Examples
 
 ### Performance Testing Production Agents
 
@@ -303,11 +303,11 @@ def test_conversation_flow():
     expect(response2).to_contain("Continuing from previous state")
 ```
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📄 License
+## License
 
 MIT (see [LICENSE](LICENSE))
 
